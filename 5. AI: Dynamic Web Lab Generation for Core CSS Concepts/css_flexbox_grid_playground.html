@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Flexbox & Grid Playground</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    code, pre, .font-mono {
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Grid pattern background for stage */
+    .bg-grid-pattern {
+      background-size: 24px 24px;
+      background-image: 
+        radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px);
+    }
+
+    /* Dark mode grid pattern */
+    .bg-grid-pattern-dark {
+      background-size: 24px 24px;
+      background-image: 
+        radial-gradient(circle, #334155 1.2px, transparent 1.2px);
+    }
+
+    /* Item Box Base Styling and Hover Effects */
+    .playground-item {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      user-select: none;
+    }
+
+    .playground-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .playground-item.selected-item {
+      ring-width: 3px;
+      outline: 3px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    /* Custom range sliders */
+    input[type=range] {
+      accent-color: #2563eb;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Visual Grid Line Overlay */
+    .grid-overlay-line {
+      pointer-events: none;
+      position: absolute;
+      border: 1px dashed rgba(99, 102, 241, 0.4);
+    }
+
+    /* Axis Direction Arrow Overlay */
+    .axis-arrow {
+      position: absolute;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-indigo-500/20">
+          📐
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold tracking-tight text-white">CSS Flexbox & Grid Playground</h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">Interactive Stage</span>
+          </div>
+          <p class="text-xs text-slate-400">Master modern CSS container & item layout mechanics in real-time</p>
+        </div>
+      </div>
+
+      <!-- Layout Quick Presets -->
+      <div class="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          Presets:
+        </span>
+        <button onclick="applyPreset('flex-row')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 transition">Flex Row</button>
+        <button onclick="applyPreset('flex-center')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 transition">Centered Hero</button>
+        <button onclick="applyPreset('grid-3col')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 transition">3-Column Grid</button>
+        <button onclick="applyPreset('holy-grail')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 transition">Holy Grail Layout</button>
+        <button onclick="applyPreset('responsive-grid')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 transition">Auto-Fit Grid</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Grid Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Controls Sidebar (5 Cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- Container Controls Box -->
+      <div class="bg-slate-950 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-5">
+        
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <h2 class="font-bold text-white text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            Container CSS Properties
+          </h2>
+          <button onclick="resetContainerProperties()" class="text-xs text-slate-400 hover:text-indigo-400 font-medium transition underline">Reset Container</button>
+        </div>
+
+        <!-- 1. Display Selector (Flex vs Grid vs Block) -->
+        <div class="space-y-1.5">
+          <label for="displaySelect" class="block text-xs font-bold text-indigo-300 uppercase tracking-wider">
+            Display Mode
+          </label>
+          <select id="displaySelect" onchange="updateLayout()" class="w-full bg-slate-900 border-2 border-indigo-500/50 hover:border-indigo-500 rounded-xl px-3 py-2 text-sm font-bold text-white focus:ring-2 focus:ring-indigo-400 outline-none transition cursor-pointer">
+            <option value="flex" selected>flex</option>
+            <option value="grid">grid</option>
+            <option value="block">block</option>
+          </select>
+        </div>
+
+        <!-- Mode Notification Banner -->
+        <div id="modeBanner" class="p-2.5 rounded-xl text-xs font-medium border flex items-center gap-2 transition-all">
+          <span id="modeBannerIcon" class="text-base">⚡</span>
+          <span id="modeBannerText">Active: <strong>Flexbox Layout</strong>. Controls alignment across Main and Cross axes.</span>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- FLEXBOX CONTROLS GROUP -->
+        <div id="flexControls" class="space-y-3 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Flexbox Options</span>
+            <span class="text-[10px] text-slate-500 font-mono">display: flex</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- flex-direction -->
+            <div class="space-y-1">
+              <label for="flexDirectionSelect" class="block text-[11px] font-bold text-slate-300">flex-direction</label>
+              <select id="flexDirectionSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="row" selected>row</option>
+                <option value="row-reverse">row-reverse</option>
+                <option value="column">column</option>
+                <option value="column-reverse">column-reverse</option>
+              </select>
+            </div>
+
+            <!-- flex-wrap -->
+            <div class="space-y-1">
+              <label for="flexWrapSelect" class="block text-[11px] font-bold text-slate-300">flex-wrap</label>
+              <select id="flexWrapSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="nowrap" selected>nowrap</option>
+                <option value="wrap">wrap</option>
+                <option value="wrap-reverse">wrap-reverse</option>
+              </select>
+            </div>
+
+            <!-- justify-content -->
+            <div class="space-y-1 sm:col-span-2">
+              <label for="justifyContentSelect" class="block text-[11px] font-bold text-slate-300">justify-content (Main Axis)</label>
+              <select id="justifyContentSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="flex-start" selected>flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+                <option value="space-evenly">space-evenly</option>
+              </select>
+            </div>
+
+            <!-- align-items -->
+            <div class="space-y-1">
+              <label for="alignItemsSelect" class="block text-[11px] font-bold text-slate-300">align-items (Cross Axis)</label>
+              <select id="alignItemsSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="stretch" selected>stretch</option>
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="baseline">baseline</option>
+              </select>
+            </div>
+
+            <!-- align-content -->
+            <div class="space-y-1">
+              <label for="alignContentSelect" class="block text-[11px] font-bold text-slate-300">align-content (Multi-line)</label>
+              <select id="alignContentSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="stretch" selected>stretch</option>
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRID CONTROLS GROUP -->
+        <div id="gridControls" class="space-y-3 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-purple-400 uppercase tracking-wider">CSS Grid Options</span>
+            <span class="text-[10px] text-slate-500 font-mono">display: grid</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- grid-template-columns -->
+            <div class="space-y-1 sm:col-span-2">
+              <div class="flex justify-between items-center">
+                <label for="gridColsSelect" class="block text-[11px] font-bold text-slate-300">grid-template-columns</label>
+                <button onclick="customGridColsPrompt()" class="text-[10px] text-purple-400 hover:underline">Custom Value</button>
+              </div>
+              <select id="gridColsSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="repeat(3, 1fr)" selected>repeat(3, 1fr)</option>
+                <option value="repeat(2, 1fr)">repeat(2, 1fr)</option>
+                <option value="repeat(5, 1fr)">repeat(5, 1fr)</option>
+                <option value="1fr 2fr 1fr">1fr 2fr 1fr</option>
+                <option value="200px 1fr">200px 1fr</option>
+                <option value="repeat(auto-fit, minmax(120px, 1fr))">repeat(auto-fit, minmax(120px, 1fr))</option>
+                <option value="repeat(auto-fill, minmax(120px, 1fr))">repeat(auto-fill, minmax(120px, 1fr))</option>
+                <option value="none">none</option>
+              </select>
+            </div>
+
+            <!-- grid-template-rows -->
+            <div class="space-y-1">
+              <label for="gridRowsSelect" class="block text-[11px] font-bold text-slate-300">grid-template-rows</label>
+              <select id="gridRowsSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="auto" selected>auto</option>
+                <option value="repeat(2, 100px)">repeat(2, 100px)</option>
+                <option value="100px 150px">100px 150px</option>
+                <option value="repeat(3, 80px)">repeat(3, 80px)</option>
+              </select>
+            </div>
+
+            <!-- grid-auto-flow -->
+            <div class="space-y-1">
+              <label for="gridAutoFlowSelect" class="block text-[11px] font-bold text-slate-300">grid-auto-flow</label>
+              <select id="gridAutoFlowSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="row" selected>row</option>
+                <option value="column">column</option>
+                <option value="row dense">row dense</option>
+                <option value="column dense">column dense</option>
+              </select>
+            </div>
+
+            <!-- justify-items (Grid) -->
+            <div class="space-y-1">
+              <label for="justifyItemsSelect" class="block text-[11px] font-bold text-slate-300">justify-items</label>
+              <select id="justifyItemsSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="stretch" selected>stretch</option>
+                <option value="start">start</option>
+                <option value="center">center</option>
+                <option value="end">end</option>
+              </select>
+            </div>
+
+            <!-- align-items (Grid) -->
+            <div class="space-y-1">
+              <label for="gridAlignItemsSelect" class="block text-[11px] font-bold text-slate-300">align-items</label>
+              <select id="gridAlignItemsSelect" onchange="updateLayout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="stretch" selected>stretch</option>
+                <option value="start">start</option>
+                <option value="center">center</option>
+                <option value="end">end</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- COMMON CONTAINER SETTINGS (Gap, Padding, Min-Height) -->
+        <div class="space-y-3">
+          <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider block">Container Spacing & Sizing</span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Gap Slider -->
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+              <div class="flex justify-between items-center mb-1">
+                <label for="gapSlider" class="text-xs font-bold text-slate-300">gap</label>
+                <span id="gapVal" class="text-[10px] font-mono bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded font-bold">16px</span>
+              </div>
+              <input type="range" id="gapSlider" min="0" max="64" value="16" oninput="updateLayout()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Container Min-Height -->
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+              <div class="flex justify-between items-center mb-1">
+                <label for="minHeightSlider" class="text-xs font-bold text-slate-300">min-height</label>
+                <span id="minHeightVal" class="text-[10px] font-mono bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded font-bold">320px</span>
+              </div>
+              <input type="range" id="minHeightSlider" min="150" max="600" value="320" oninput="updateLayout()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ITEM MODIFIER & MANAGEMENT PANEL -->
+      <div class="bg-slate-950 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+        
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="font-bold text-white text-sm">Child Items Manager</h2>
+            <span id="itemCountBadge" class="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">5 Items</span>
+          </div>
+
+          <!-- Add / Remove Buttons -->
+          <div class="flex items-center gap-1.5">
+            <button onclick="addItem()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <span>+</span> Add Item
+            </button>
+            <button onclick="removeItem()" class="px-2.5 py-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <span>-</span> Remove
+            </button>
+          </div>
+        </div>
+
+        <!-- Selected Item Inspector Section -->
+        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span id="selectedItemTitle" class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+              Selected: Item 1
+            </span>
+            <span class="text-[10px] text-slate-500">Click any box on stage to select</span>
+          </div>
+
+          <div id="itemSpecificControls" class="grid grid-cols-2 gap-2.5 text-xs">
+            <!-- Flex Grow (in flex mode) -->
+            <div id="flexGrowGroup" class="space-y-1">
+              <label for="itemFlexGrow" class="block text-[10px] font-bold text-slate-400">flex-grow</label>
+              <input type="number" id="itemFlexGrow" min="0" max="10" value="0" onchange="updateSelectedItem()" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs font-mono text-white">
+            </div>
+
+            <!-- Flex Shrink -->
+            <div id="flexShrinkGroup" class="space-y-1">
+              <label for="itemFlexShrink" class="block text-[10px] font-bold text-slate-400">flex-shrink</label>
+              <input type="number" id="itemFlexShrink" min="0" max="10" value="1" onchange="updateSelectedItem()" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs font-mono text-white">
+            </div>
+
+            <!-- Align Self -->
+            <div class="space-y-1 col-span-2">
+              <label for="itemAlignSelf" class="block text-[10px] font-bold text-slate-400">align-self</label>
+              <select id="itemAlignSelf" onchange="updateSelectedItem()" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs font-mono text-white">
+                <option value="auto" selected>auto</option>
+                <option value="flex-start">flex-start / start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end / end</option>
+                <option value="stretch">stretch</option>
+                <option value="baseline">baseline</option>
+              </select>
+            </div>
+
+            <!-- Grid Column Span (in grid mode) -->
+            <div id="gridColSpanGroup" class="space-y-1">
+              <label for="itemGridCol" class="block text-[10px] font-bold text-slate-400">grid-column</label>
+              <input type="text" id="itemGridCol" placeholder="auto / span 2" value="auto" onchange="updateSelectedItem()" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs font-mono text-white">
+            </div>
+
+            <!-- Grid Row Span -->
+            <div id="gridRowSpanGroup" class="space-y-1">
+              <label for="itemGridRow" class="block text-[10px] font-bold text-slate-400">grid-row</label>
+              <input type="text" id="itemGridRow" placeholder="auto / span 2" value="auto" onchange="updateSelectedItem()" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs font-mono text-white">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: Interactive Stage & Live Output (7 Cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Stage Container Outer Card -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+        
+        <!-- Stage Toolbar Header -->
+        <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+            <span class="ml-2 text-xs font-bold text-slate-300 font-mono">#container</span>
+          </div>
+
+          <!-- Axis & Visual Helper Toggles -->
+          <div class="flex items-center gap-3">
+            <label class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-pointer">
+              <input type="checkbox" id="showAxisToggle" checked onchange="updateLayout()" class="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500">
+              Visual Axis / Overlay
+            </label>
+            <label class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-pointer">
+              <input type="checkbox" id="showDimensionsToggle" checked onchange="updateLayout()" class="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500">
+              Item Badges
+            </label>
+          </div>
+
+        </div>
+
+        <!-- Canvas Stage Viewport -->
+        <div id="stageViewport" class="p-6 bg-grid-pattern-dark min-h-[380px] flex flex-col justify-start relative overflow-x-auto transition-all">
+          
+          <!-- Visual Axis Diagram Helper (For Flexbox) -->
+          <div id="axisOverlay" class="absolute inset-x-6 top-3 pointer-events-none flex items-center justify-between text-[11px] font-mono text-indigo-400 font-bold z-20 transition-opacity">
+            <span id="mainAxisLabel" class="bg-indigo-950/90 border border-indigo-500/40 px-2 py-0.5 rounded shadow">Main Axis →</span>
+            <span id="crossAxisLabel" class="bg-purple-950/90 border border-purple-500/40 px-2 py-0.5 rounded shadow">Cross Axis ↓</span>
+          </div>
+
+          <!-- THE CONTAINER (Controlled element) -->
+          <div id="container" class="w-full bg-slate-900/90 border-2 border-dashed border-indigo-500/60 rounded-2xl p-4 transition-all relative min-h-[320px]">
+            <!-- Dynamic Items injected via JS -->
+          </div>
+
+        </div>
+
+        <!-- Stage Footer Information -->
+        <div id="stageFooterTip" class="px-5 py-3 bg-slate-900/80 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+          <span id="layoutStatsText">Container: <strong class="text-white">display: flex</strong> | Items: <strong class="text-white">5</strong></span>
+          <span class="text-[11px] text-indigo-400 font-mono font-semibold">Live Interactive View</span>
+        </div>
+
+      </div>
+
+      <!-- Live Generated CSS Code -->
+      <div class="bg-slate-950 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            Generated CSS Styles
+          </span>
+          <button onclick="copyCSS()" class="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <svg id="copyIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span id="copyBtnText">Copy CSS</span>
+          </button>
+        </div>
+
+        <pre id="cssOutput" class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 bg-slate-900/90 rounded-xl border border-slate-800/80"></pre>
+      </div>
+
+      <!-- Cheatsheet & Mental Model Helper -->
+      <div class="bg-slate-950 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <span>💡</span> Layout Cheatsheet & Key Concepts
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-400">
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+            <strong class="text-blue-400 block font-semibold">Flexbox Mechanics:</strong>
+            <p class="leading-relaxed">Best for 1-dimensional layouts (rows or columns). Alignment is defined relative to the <code>flex-direction</code> main axis and cross axis.</p>
+          </div>
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+            <strong class="text-purple-400 block font-semibold">CSS Grid Mechanics:</strong>
+            <p class="leading-relaxed">Best for 2-dimensional grid structures with explicit columns and rows. Use <code>fr</code> units or <code>auto-fit</code>/<code>auto-fill</code> for fluid responsive design.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-indigo-600 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border border-indigo-400/30 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50 flex items-center gap-2">
+    <span class="text-base">✓</span>
+    <span id="toastMsg" class="font-semibold">CSS copied to clipboard!</span>
+  </div>
+
+  <script>
+    // Item color palettes for vibrant visual differentiation
+    const ITEM_COLORS = [
+      { bg: 'bg-indigo-600/90', border: 'border-indigo-400', text: 'text-indigo-100', accent: '#6366f1' },
+      { bg: 'bg-emerald-600/90', border: 'border-emerald-400', text: 'text-emerald-100', accent: '#10b981' },
+      { bg: 'bg-amber-600/90', border: 'border-amber-400', text: 'text-amber-100', accent: '#f59e0b' },
+      { bg: 'bg-rose-600/90', border: 'border-rose-400', text: 'text-rose-100', accent: '#f43f5e' },
+      { bg: 'bg-cyan-600/90', border: 'border-cyan-400', text: 'text-cyan-100', accent: '#06b6d4' },
+      { bg: 'bg-purple-600/90', border: 'border-purple-400', text: 'text-purple-100', accent: '#a855f7' },
+      { bg: 'bg-fuchsia-600/90', border: 'border-fuchsia-400', text: 'text-fuchsia-100', accent: '#d946ef' },
+      { bg: 'bg-lime-600/90', border: 'border-lime-400', text: 'text-lime-100', accent: '#84cc16' },
+    ];
+
+    // State Configuration
+    const state = {
+      display: 'flex',
+      
+      // Flexbox Properties
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
+      justifyContent: 'flex-start',
+      alignItems: 'stretch',
+      alignContent: 'stretch',
+
+      // Grid Properties
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateRows: 'auto',
+      gridAutoFlow: 'row',
+      justifyItems: 'stretch',
+      gridAlignItems: 'stretch',
+
+      // Common Properties
+      gap: 16,
+      minHeight: 320,
+
+      // Selected Item Index
+      selectedIndex: 0,
+
+      // Item Data List
+      items: [
+        { id: 1, flexGrow: 0, flexShrink: 1, alignSelf: 'auto', gridColumn: 'auto', gridRow: 'auto', height: '' },
+        { id: 2, flexGrow: 0, flexShrink: 1, alignSelf: 'auto', gridColumn: 'auto', gridRow: 'auto', height: '' },
+        { id: 3, flexGrow: 0, flexShrink: 1, alignSelf: 'auto', gridColumn: 'auto', gridRow: 'auto', height: '' },
+        { id: 4, flexGrow: 0, flexShrink: 1, alignSelf: 'auto', gridColumn: 'auto', gridRow: 'auto', height: '' },
+        { id: 5, flexGrow: 0, flexShrink: 1, alignSelf: 'auto', gridColumn: 'auto', gridRow: 'auto', height: '' },
+      ]
+    };
+
+    /**
+     * Main update routine triggered on control input change
+     */
+    function updateLayout() {
+      const container = document.getElementById('container');
+      
+      // 1. Read Container Dropdown Inputs
+      state.display = document.getElementById('displaySelect').value;
+      
+      // Flexbox
+      state.flexDirection = document.getElementById('flexDirectionSelect').value;
+      state.flexWrap = document.getElementById('flexWrapSelect').value;
+      state.justifyContent = document.getElementById('justifyContentSelect').value;
+      state.alignItems = document.getElementById('alignItemsSelect').value;
+      state.alignContent = document.getElementById('alignContentSelect').value;
+
+      // Grid
+      state.gridTemplateColumns = document.getElementById('gridColsSelect').value;
+      state.gridTemplateRows = document.getElementById('gridRowsSelect').value;
+      state.gridAutoFlow = document.getElementById('gridAutoFlowSelect').value;
+      state.justifyItems = document.getElementById('justifyItemsSelect').value;
+      state.gridAlignItems = document.getElementById('gridAlignItemsSelect').value;
+
+      // Common
+      state.gap = parseInt(document.getElementById('gapSlider').value);
+      state.minHeight = parseInt(document.getElementById('minHeightSlider').value);
+
+      // Update Slider Value Badges
+      document.getElementById('gapVal').textContent = `${state.gap}px`;
+      document.getElementById('minHeightVal').textContent = `${state.minHeight}px`;
+
+      // 2. Toggle Visibility of Mode Specific Control Groups
+      const isFlex = state.display === 'flex';
+      const isGrid = state.display === 'grid';
+
+      document.getElementById('flexControls').style.display = isFlex ? 'block' : 'none';
+      document.getElementById('gridControls').style.display = isGrid ? 'block' : 'none';
+
+      // Item level flex vs grid controls
+      document.getElementById('flexGrowGroup').style.display = isFlex ? 'block' : 'none';
+      document.getElementById('flexShrinkGroup').style.display = isFlex ? 'block' : 'none';
+      document.getElementById('gridColSpanGroup').style.display = isGrid ? 'block' : 'none';
+      document.getElementById('gridRowSpanGroup').style.display = isGrid ? 'block' : 'none';
+
+      // Update Banner Explanation
+      const modeBanner = document.getElementById('modeBanner');
+      const modeBannerIcon = document.getElementById('modeBannerIcon');
+      const modeBannerText = document.getElementById('modeBannerText');
+
+      if (isFlex) {
+        modeBanner.className = 'p-2.5 rounded-xl text-xs font-medium bg-blue-950/60 text-blue-300 border border-blue-800/60 flex items-center gap-2';
+        modeBannerIcon.textContent = '⚡';
+        modeBannerText.innerHTML = `Active: <strong>Flexbox Layout</strong>. Distributes items along a 1D direction (${state.flexDirection}).`;
+      } else if (isGrid) {
+        modeBanner.className = 'p-2.5 rounded-xl text-xs font-medium bg-purple-950/60 text-purple-300 border border-purple-800/60 flex items-center gap-2';
+        modeBannerIcon.textContent = '📐';
+        modeBannerText.innerHTML = `Active: <strong>CSS Grid Layout</strong>. 2D track layout with columns: <code>${state.gridTemplateColumns}</code>.`;
+      } else {
+        modeBanner.className = 'p-2.5 rounded-xl text-xs font-medium bg-slate-900 text-slate-300 border border-slate-800 flex items-center gap-2';
+        modeBannerIcon.textContent = '📦';
+        modeBannerText.innerHTML = `Active: <strong>Block Layout</strong>. Standard vertical flow stack. Flex & Grid align properties are inactive.`;
+      }
+
+      // 3. Apply CSS Properties to Container
+      container.style.display = state.display;
+      container.style.gap = `${state.gap}px`;
+      container.style.minHeight = `${state.minHeight}px`;
+
+      if (isFlex) {
+        container.style.flexDirection = state.flexDirection;
+        container.style.flexWrap = state.flexWrap;
+        container.style.justifyContent = state.justifyContent;
+        container.style.alignItems = state.alignItems;
+        container.style.alignContent = state.alignContent;
+
+        // Reset grid styles
+        container.style.gridTemplateColumns = '';
+        container.style.gridTemplateRows = '';
+        container.style.gridAutoFlow = '';
+        container.style.justifyItems = '';
+      } else if (isGrid) {
+        container.style.gridTemplateColumns = state.gridTemplateColumns;
+        container.style.gridTemplateRows = state.gridTemplateRows;
+        container.style.gridAutoFlow = state.gridAutoFlow;
+        container.style.justifyItems = state.justifyItems;
+        container.style.alignItems = state.gridAlignItems;
+
+        // Reset flex styles
+        container.style.flexDirection = '';
+        container.style.flexWrap = '';
+        container.style.justifyContent = '';
+      } else {
+        // Block mode
+        container.style.flexDirection = '';
+        container.style.gridTemplateColumns = '';
+      }
+
+      // 4. Render Child Items into Container
+      renderItems();
+
+      // 5. Update Axis / Grid Overlay Helpers
+      updateOverlayHelpers();
+
+      // 6. Generate Live CSS Output
+      renderCSSOutput();
+
+      // Update footer info
+      document.getElementById('layoutStatsText').innerHTML = `Container: <strong class="text-white">display: ${state.display}</strong> | Items: <strong class="text-white">${state.items.length}</strong>`;
+    }
+
+    /**
+     * Renders items inside container
+     */
+    function renderItems() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+
+      const showBadges = document.getElementById('showDimensionsToggle').checked;
+
+      state.items.forEach((item, idx) => {
+        const color = ITEM_COLORS[idx % ITEM_COLORS.length];
+        const isSelected = idx === state.selectedIndex;
+
+        const itemEl = document.createElement('div');
+        itemEl.className = `playground-item ${color.bg} ${color.border} ${color.text} border-2 rounded-xl p-3 flex flex-col justify-between shadow-md cursor-pointer ${isSelected ? 'selected-item' : ''}`;
+        
+        // Inline styles for item properties
+        itemEl.style.flexGrow = item.flexGrow;
+        itemEl.style.flexShrink = item.flexShrink;
+        itemEl.style.alignSelf = item.alignSelf;
+
+        if (state.display === 'grid') {
+          if (item.gridColumn && item.gridColumn !== 'auto') itemEl.style.gridColumn = item.gridColumn;
+          if (item.gridRow && item.gridRow !== 'auto') itemEl.style.gridRow = item.gridRow;
+        }
+
+        if (item.height) {
+          itemEl.style.height = item.height;
+        }
+
+        // Inner item content
+        itemEl.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="font-extrabold text-sm tracking-tight">Item ${item.id}</span>
+            ${isSelected ? '<span class="text-[9px] font-bold bg-white/20 px-1.5 py-0.5 rounded text-white font-mono">ACTIVE</span>' : ''}
+          </div>
+          ${showBadges ? `
+            <div class="text-[10px] font-mono opacity-90 space-y-0.5 mt-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
+              ${state.display === 'flex' ? `<div>grow: ${item.flexGrow}</div>` : ''}
+              ${state.display === 'grid' && item.gridColumn !== 'auto' ? `<div>col: ${item.gridColumn}</div>` : ''}
+              <div>align: ${item.alignSelf}</div>
+            </div>
+          ` : ''}
+        `;
+
+        // Selection Click Event
+        itemEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectItem(idx);
+        });
+
+        container.appendChild(itemEl);
+      });
+
+      // Update Item Controls UI to reflect currently selected item
+      updateSelectedItemControlsUI();
+    }
+
+    /**
+     * Selects an item for property editing
+     */
+    function selectItem(index) {
+      if (index >= 0 && index < state.items.length) {
+        state.selectedIndex = index;
+        renderItems();
+      }
+    }
+
+    /**
+     * Updates inputs in Selected Item Panel
+     */
+    function updateSelectedItemControlsUI() {
+      const item = state.items[state.selectedIndex];
+      if (!item) return;
+
+      document.getElementById('selectedItemTitle').innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${ITEM_COLORS[state.selectedIndex % ITEM_COLORS.length].accent}"></span>
+        Selected: Item ${item.id}
+      `;
+
+      document.getElementById('itemFlexGrow').value = item.flexGrow;
+      document.getElementById('itemFlexShrink').value = item.flexShrink;
+      document.getElementById('itemAlignSelf').value = item.alignSelf;
+      document.getElementById('itemGridCol').value = item.gridColumn || 'auto';
+      document.getElementById('itemGridRow').value = item.gridRow || 'auto';
+    }
+
+    /**
+     * Updates selected item state from control inputs
+     */
+    function updateSelectedItem() {
+      const item = state.items[state.selectedIndex];
+      if (!item) return;
+
+      item.flexGrow = parseInt(document.getElementById('itemFlexGrow').value) || 0;
+      item.flexShrink = parseInt(document.getElementById('itemFlexShrink').value) || 0;
+      item.alignSelf = document.getElementById('itemAlignSelf').value;
+      item.gridColumn = document.getElementById('itemGridCol').value.trim();
+      item.gridRow = document.getElementById('itemGridRow').value.trim();
+
+      renderItems();
+      renderCSSOutput();
+    }
+
+    /**
+     * Add new item to container
+     */
+    function addItem() {
+      const newId = state.items.length > 0 ? Math.max(...state.items.map(i => i.id)) + 1 : 1;
+      state.items.push({
+        id: newId,
+        flexGrow: 0,
+        flexShrink: 1,
+        alignSelf: 'auto',
+        gridColumn: 'auto',
+        gridRow: 'auto',
+        height: ''
+      });
+      state.selectedIndex = state.items.length - 1;
+      updateLayout();
+      showToast(`Added Item ${newId}`);
+    }
+
+    /**
+     * Remove currently selected item or last item
+     */
+    function removeItem() {
+      if (state.items.length <= 1) {
+        showToast("Minimum 1 item required");
+        return;
+      }
+      const removed = state.items.splice(state.selectedIndex, 1);
+      state.selectedIndex = Math.max(0, state.selectedIndex - 1);
+      updateLayout();
+      showToast(`Removed Item ${removed[0].id}`);
+    }
+
+    /**
+     * Updates Visual Overlay Axis directions
+     */
+    function updateOverlayHelpers() {
+      const axisOverlay = document.getElementById('axisOverlay');
+      const showAxis = document.getElementById('showAxisToggle').checked;
+
+      if (!showAxis || state.display === 'block') {
+        axisOverlay.style.opacity = '0';
+        return;
+      }
+
+      axisOverlay.style.opacity = '1';
+
+      const mainLabel = document.getElementById('mainAxisLabel');
+      const crossLabel = document.getElementById('crossAxisLabel');
+
+      if (state.display === 'flex') {
+        const isColumn = state.flexDirection.includes('column');
+        const isReverse = state.flexDirection.includes('reverse');
+
+        mainLabel.textContent = `Main Axis (${state.flexDirection}) ${isReverse ? '←' : '→'}`;
+        crossLabel.textContent = `Cross Axis ${isColumn ? '→' : '↓'}`;
+      } else if (state.display === 'grid') {
+        mainLabel.textContent = `Grid Columns Track →`;
+        crossLabel.textContent = `Grid Rows Track ↓`;
+      }
+    }
+
+    /**
+     * Constructs clean CSS string for output box
+     */
+    function renderCSSOutput() {
+      let css = `#container {\n  display: ${state.display};\n  gap: ${state.gap}px;\n  min-height: ${state.minHeight}px;\n`;
+
+      if (state.display === 'flex') {
+        css += `  flex-direction: ${state.flexDirection};\n`;
+        if (state.flexWrap !== 'nowrap') css += `  flex-wrap: ${state.flexWrap};\n`;
+        css += `  justify-content: ${state.justifyContent};\n`;
+        css += `  align-items: ${state.alignItems};\n`;
+        if (state.alignContent !== 'stretch') css += `  align-content: ${state.alignContent};\n`;
+      } else if (state.display === 'grid') {
+        css += `  grid-template-columns: ${state.gridTemplateColumns};\n`;
+        if (state.gridTemplateRows !== 'auto') css += `  grid-template-rows: ${state.gridTemplateRows};\n`;
+        if (state.gridAutoFlow !== 'row') css += `  grid-auto-flow: ${state.gridAutoFlow};\n`;
+        if (state.justifyItems !== 'stretch') css += `  justify-items: ${state.justifyItems};\n`;
+        if (state.gridAlignItems !== 'stretch') css += `  align-items: ${state.gridAlignItems};\n`;
+      }
+
+      css += `}\n`;
+
+      // Item specific CSS if custom rules applied
+      const customItems = state.items.filter(i => i.flexGrow > 0 || i.alignSelf !== 'auto' || (i.gridColumn && i.gridColumn !== 'auto') || (i.gridRow && i.gridRow !== 'auto'));
+      if (customItems.length > 0) {
+        css += `\n/* Item Modifications */\n`;
+        customItems.forEach(i => {
+          css += `.item-${i.id} {\n`;
+          if (state.display === 'flex' && i.flexGrow > 0) css += `  flex-grow: ${i.flexGrow};\n`;
+          if (i.alignSelf !== 'auto') css += `  align-self: ${i.alignSelf};\n`;
+          if (state.display === 'grid' && i.gridColumn && i.gridColumn !== 'auto') css += `  grid-column: ${i.gridColumn};\n`;
+          if (state.display === 'grid' && i.gridRow && i.gridRow !== 'auto') css += `  grid-row: ${i.gridRow};\n`;
+          css += `}\n`;
+        });
+      }
+
+      document.getElementById('cssOutput').textContent = css;
+    }
+
+    /**
+     * Quick Presets
+     */
+    function applyPreset(preset) {
+      resetContainerProperties();
+
+      if (preset === 'flex-row') {
+        document.getElementById('displaySelect').value = 'flex';
+        document.getElementById('flexDirectionSelect').value = 'row';
+        document.getElementById('justifyContentSelect').value = 'space-between';
+        document.getElementById('alignItemsSelect').value = 'center';
+      } else if (preset === 'flex-center') {
+        document.getElementById('displaySelect').value = 'flex';
+        document.getElementById('justifyContentSelect').value = 'center';
+        document.getElementById('alignItemsSelect').value = 'center';
+      } else if (preset === 'grid-3col') {
+        document.getElementById('displaySelect').value = 'grid';
+        document.getElementById('gridColsSelect').value = 'repeat(3, 1fr)';
+        document.getElementById('gapSlider').value = 20;
+      } else if (preset === 'holy-grail') {
+        document.getElementById('displaySelect').value = 'grid';
+        document.getElementById('gridColsSelect').value = '200px 1fr 200px';
+        document.getElementById('gridRowsSelect').value = '100px 150px';
+      } else if (preset === 'responsive-grid') {
+        document.getElementById('displaySelect').value = 'grid';
+        document.getElementById('gridColsSelect').value = 'repeat(auto-fit, minmax(120px, 1fr))';
+      }
+
+      updateLayout();
+      showToast(`Applied Preset: ${preset}`);
+    }
+
+    /**
+     * Resets container inputs to default
+     */
+    function resetContainerProperties() {
+      document.getElementById('displaySelect').value = 'flex';
+      document.getElementById('flexDirectionSelect').value = 'row';
+      document.getElementById('flexWrapSelect').value = 'nowrap';
+      document.getElementById('justifyContentSelect').value = 'flex-start';
+      document.getElementById('alignItemsSelect').value = 'stretch';
+      document.getElementById('alignContentSelect').value = 'stretch';
+
+      document.getElementById('gridColsSelect').value = 'repeat(3, 1fr)';
+      document.getElementById('gridRowsSelect').value = 'auto';
+      document.getElementById('gridAutoFlowSelect').value = 'row';
+      document.getElementById('justifyItemsSelect').value = 'stretch';
+      document.getElementById('gridAlignItemsSelect').value = 'stretch';
+
+      document.getElementById('gapSlider').value = 16;
+      document.getElementById('minHeightSlider').value = 320;
+
+      updateLayout();
+    }
+
+    /**
+     * Prompt for custom grid column string
+     */
+    function customGridColsPrompt() {
+      const val = prompt("Enter custom grid-template-columns value:", "1fr 2fr 1fr");
+      if (val) {
+        const select = document.getElementById('gridColsSelect');
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        opt.selected = true;
+        select.appendChild(opt);
+        updateLayout();
+      }
+    }
+
+    /**
+     * Copy CSS code
+     */
+    function copyCSS() {
+      const codeText = document.getElementById('cssOutput').textContent;
+      const textArea = document.createElement("textarea");
+      textArea.value = codeText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast("CSS copied to clipboard!");
+      } catch (err) {
+        showToast("Failed to copy CSS");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    /**
+     * Toast Notification
+     */
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2400);
+    }
+
+    // Initialize application on window load
+    window.onload = function() {
+      updateLayout();
+    };
+  </script>
+</body>
+</html>
