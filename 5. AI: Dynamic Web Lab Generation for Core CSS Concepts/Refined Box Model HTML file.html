@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Box Model & Display Property Visualizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Dynamic background layer styling for Box 1 to visually separate padding and content areas */
+    .box-model-layers {
+      background-image: 
+        linear-gradient(rgba(147, 197, 253, 0.85), rgba(147, 197, 253, 0.85)), /* Content area: Soft Blue */
+        linear-gradient(rgba(187, 247, 208, 0.85), rgba(187, 247, 208, 0.85)); /* Padding area: Soft Green */
+      background-clip: content-box, padding-box;
+      background-origin: content-box, padding-box;
+      background-repeat: no-repeat;
+      transition: all 0.15s ease-out;
+    }
+
+    /* Pattern background for preview grid */
+    .bg-grid-pattern {
+      background-size: 20px 20px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+
+    /* Custom range slider styling */
+    input[type=range] {
+      accent-color: #3b82f6;
+    }
+
+    /* Overlay styles for margin region visualization */
+    #margin-overlay {
+      pointer-events: none;
+      transition: all 0.15s ease-out;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-x-hidden antialiased">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-950 border-b border-slate-800 px-4 py-3 sm:px-6 sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight leading-none">CSS Box Model & Display Explorer</h1>
+          <p class="text-xs text-slate-400 mt-1">Interactive layout engine sandbox & computed inspector</p>
+        </div>
+      </div>
+
+      <!-- Color Legend Bar -->
+      <div class="flex items-center flex-wrap gap-2 text-xs font-mono bg-slate-900/80 p-1.5 rounded-lg border border-slate-800">
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/30">
+          <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> Margin
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Border
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Padding
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span> Content
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interactive Layout Grid -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Live Preview Canvas & DevTools Box Model Diagram -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Card 1: Interactive Preview Arena -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h2 class="text-sm font-semibold text-slate-200">Live Document Flow Canvas</h2>
+          </div>
+          
+          <!-- Quick Options Toggles -->
+          <div class="flex items-center gap-3 text-xs text-slate-400">
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition">
+              <input type="checkbox" id="toggle-margin-overlay" checked class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0">
+              <span>Show Margin Area</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition">
+              <input type="checkbox" id="toggle-flow-text" checked class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0">
+              <span>Surrounding Text</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div id="preview-arena" class="relative min-h-[340px] sm:min-h-[380px] p-6 bg-slate-900/50 bg-grid-pattern overflow-auto flex flex-col justify-start items-start">
+          
+          <!-- Surrounding Text - Leading -->
+          <p id="lead-text" class="text-slate-400 text-sm mb-3 leading-relaxed transition-opacity">
+            Preceding document text element. Notice how <strong class="text-slate-200">Box 1</strong> interacts with surrounding inline flow:
+          </p>
+
+          <!-- Flow Container wrapping Box 1 & Box 2 -->
+          <div id="flow-container" class="w-full bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 relative min-h-[220px]">
+            
+            <!-- Dynamic Margin Highlight Overlay (Syncs with Box 1) -->
+            <div id="margin-overlay" class="absolute border-2 border-dashed border-orange-400/80 bg-orange-500/20 rounded-sm z-0">
+              <span class="absolute top-1 left-1 text-[10px] font-mono font-bold text-orange-300 bg-orange-950/80 px-1 rounded">Margin Box</span>
+            </div>
+
+            <!-- Controlled Element: Box 1 -->
+            <div id="box1" class="box-model-layers text-slate-900 font-medium relative z-10 select-none shadow-md"
+                 style="display: block; width: 220px; height: 110px; padding: 20px 20px 20px 20px; margin: 20px 20px 20px 20px; border-style: solid; border-color: #d97706; border-width: 6px 6px 6px 6px; border-radius: 8px; box-sizing: content-box;">
+              
+              <!-- Content Tag inside Box 1 -->
+              <div id="box1-content-inner" class="w-full h-full flex flex-col items-center justify-center text-center p-1 bg-blue-500/10 border border-dashed border-blue-600/40 rounded">
+                <span class="text-xs font-bold text-blue-950 uppercase tracking-wider">Box 1</span>
+                <span id="box1-dim-label" class="text-[11px] font-mono text-blue-900 mt-0.5">220px × 110px</span>
+              </div>
+            </div>
+
+            <!-- Neighbor Element: Box 2 -->
+            <div id="box2" class="bg-purple-950/90 border-2 border-purple-500 text-purple-200 p-4 rounded-lg font-mono text-xs shadow-lg inline-block relative z-10 my-2">
+              <div class="flex items-center gap-1.5 font-bold">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span> Box 2 (Observer)
+              </div>
+              <div class="text-[10px] text-purple-300/80 mt-1">display: inline-block</div>
+            </div>
+
+          </div>
+
+          <!-- Surrounding Text - Trailing -->
+          <p id="trail-text" class="text-slate-400 text-sm mt-3 leading-relaxed transition-opacity">
+            Succeeding document content. Observe line breaks, vertical spacing collapse, or horizontal stacking.
+          </p>
+        </div>
+
+        <!-- Canvas Footer Context Banner -->
+        <div class="px-5 py-2.5 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500">Flow State:</span>
+            <span id="flow-state-badge" class="px-2 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40 font-semibold">
+              display: block
+            </span>
+          </div>
+          <div id="box-sizing-badge" class="text-slate-400">
+            box-sizing: <span class="text-amber-300 font-semibold">content-box</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: DevTools Concentric Box Model Visualizer -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl p-5 flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Computed Box Model Inspector
+          </h2>
+          <span class="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+            Real-time Metrics
+          </span>
+        </div>
+
+        <!-- DevTools Concentric Box Container with 4-Edge (TRBL) Labels -->
+        <div class="relative bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col items-center justify-center font-mono text-xs select-none">
+          
+          <!-- MARGIN LAYER DIAGRAM -->
+          <div class="w-full bg-orange-500/10 border-2 border-orange-500/40 rounded-lg p-2 text-orange-300 relative transition-all">
+            <div class="flex justify-between items-center text-[10px] font-bold">
+              <span>MARGIN</span>
+              <span id="dt-margin-top" class="bg-orange-950/80 px-1.5 py-0.5 rounded border border-orange-500/30">20</span>
+              <span class="text-[9px] text-slate-500">TRBL</span>
+            </div>
+
+            <div class="flex items-center gap-2 my-1">
+              <span id="dt-margin-left" class="text-[10px] font-bold bg-orange-950/80 px-1 py-0.5 rounded border border-orange-500/30">20</span>
+
+              <!-- BORDER LAYER DIAGRAM -->
+              <div class="flex-1 bg-amber-500/15 border-2 border-amber-500/50 rounded-md p-2 text-amber-300 relative transition-all">
+                <div class="flex justify-between items-center text-[10px] font-bold">
+                  <span>BORDER</span>
+                  <span id="dt-border-top" class="bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/30">6</span>
+                  <span id="dt-radius-val" class="text-[9px] text-amber-400/80">r: 8px</span>
+                </div>
+
+                <div class="flex items-center gap-2 my-1">
+                  <span id="dt-border-left" class="text-[10px] font-bold bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30">6</span>
+
+                  <!-- PADDING LAYER DIAGRAM -->
+                  <div class="flex-1 bg-emerald-500/15 border-2 border-emerald-500/50 rounded p-2 text-emerald-300 relative transition-all">
+                    <div class="flex justify-between items-center text-[10px] font-bold">
+                      <span>PADDING</span>
+                      <span id="dt-padding-top" class="bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/30">20</span>
+                      <span></span>
+                    </div>
+
+                    <div class="flex items-center gap-2 my-1">
+                      <span id="dt-padding-left" class="text-[10px] font-bold bg-emerald-950/80 px-1 py-0.5 rounded border border-emerald-500/30">20</span>
+
+                      <!-- CONTENT LAYER DIAGRAM -->
+                      <div class="flex-1 bg-blue-500/25 border-2 border-blue-500/60 rounded p-2 text-blue-200 text-center font-bold relative transition-all min-w-[120px]">
+                        <div class="text-[10px] text-blue-400 uppercase tracking-wide">CONTENT</div>
+                        <div id="dt-content-dim" class="text-xs font-extrabold text-blue-100 my-0.5">220px × 110px</div>
+                        <div id="dt-inline-warning" class="hidden text-[9px] text-amber-400 font-normal mt-0.5 bg-amber-950/80 p-0.5 rounded border border-amber-500/30">
+                          ⚠️ Dimensions ignored in inline mode
+                        </div>
+                      </div>
+
+                      <span id="dt-padding-right" class="text-[10px] font-bold bg-emerald-950/80 px-1 py-0.5 rounded border border-emerald-500/30">20</span>
+                    </div>
+
+                    <div class="text-center text-[10px] font-bold">
+                      <span id="dt-padding-bottom" class="bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/30">20</span>
+                    </div>
+                  </div>
+
+                  <span id="dt-border-right" class="text-[10px] font-bold bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30">6</span>
+                </div>
+
+                <div class="text-center text-[10px] font-bold">
+                  <span id="dt-border-bottom" class="bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/30">6</span>
+                </div>
+              </div>
+
+              <span id="dt-margin-right" class="text-[10px] font-bold bg-orange-950/80 px-1 py-0.5 rounded border border-orange-500/30">20</span>
+            </div>
+
+            <div class="text-center text-[10px] font-bold">
+              <span id="dt-margin-bottom" class="bg-orange-950/80 px-1.5 py-0.5 rounded border border-orange-500/30">20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Rendered Size Formula Calculation -->
+        <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-800 text-xs font-mono flex flex-col gap-1">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">Total Rendered Width:</span>
+            <span id="total-width-formula" class="text-blue-300 font-bold">
+              220 + 40 + 12 = <span class="text-emerald-400 underline decoration-emerald-500/50">272px</span>
+            </span>
+          </div>
+          <div class="flex justify-between items-center text-[11px] text-slate-500 pt-1 border-t border-slate-800">
+            <span>Total Rendered Height:</span>
+            <span id="total-height-formula" class="text-slate-300 font-medium">
+              110 + 40 + 12 = 162px
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Control Panel & Educational Reference -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
+      <!-- Card 3: Control Panel -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl p-5 flex flex-col gap-5">
+        
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Box 1 Control Panel
+          </h2>
+
+          <!-- Presets Dropdown Button -->
+          <div class="relative inline-block text-left">
+            <select id="preset-select" class="bg-slate-900 border border-slate-700 text-xs text-blue-400 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer font-medium">
+              <option value="" disabled selected>✨ Load Preset...</option>
+              <option value="default-block">📦 Standard Block Box</option>
+              <option value="asymmetric-padding">📐 Asymmetric Padding Card</option>
+              <option value="rounded-pill">💊 Soft Rounded Pill</option>
+              <option value="inline-badge">🏷️ Inline Text Badge</option>
+              <option value="inline-block-card">🃏 Inline-Block Card</option>
+              <option value="border-box-compare">📐 Box-Sizing Comparison</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Display & Box-Sizing Dropdowns Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- DISPLAY PROPERTY DROPDOWN -->
+          <div class="flex flex-col gap-1.5">
+            <label for="display-select" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>Display Property</span>
+              <span id="display-pill" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-300 border border-blue-700/50">block</span>
+            </label>
+            <select id="display-select" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer">
+              <option value="block" selected>block</option>
+              <option value="inline-block">inline-block</option>
+              <option value="inline">inline</option>
+            </select>
+          </div>
+
+          <!-- BOX-SIZING DROPDOWN -->
+          <div class="flex flex-col gap-1.5">
+            <label for="box-sizing-select" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>Box Sizing</span>
+              <span id="sizing-pill" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-700/50">content-box</span>
+            </label>
+            <select id="box-sizing-select" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer">
+              <option value="content-box" selected>content-box</option>
+              <option value="border-box">border-box</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="border-t border-slate-800/80 my-0.5"></div>
+
+        <!-- SLIDERS SECTION -->
+        <div class="space-y-4">
+          
+          <!-- WIDTH & HEIGHT ROW -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- WIDTH SLIDER -->
+            <div id="width-slider-group" class="flex flex-col gap-1">
+              <div class="flex justify-between items-center text-xs font-medium">
+                <span class="text-slate-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-400"></span> Width
+                </span>
+                <span id="width-val" class="font-mono text-blue-400 font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-[11px]">220px</span>
+              </div>
+              <input type="range" id="slider-width" min="60" max="380" value="220" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+              <span id="inline-width-note" class="hidden text-[10px] text-amber-400 italic">Ignored in 'inline'</span>
+            </div>
+
+            <!-- HEIGHT SLIDER -->
+            <div id="height-slider-group" class="flex flex-col gap-1">
+              <div class="flex justify-between items-center text-xs font-medium">
+                <span class="text-slate-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-400"></span> Height
+                </span>
+                <span id="height-val" class="font-mono text-blue-400 font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-[11px]">110px</span>
+              </div>
+              <input type="range" id="slider-height" min="30" max="220" value="110" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+              <span id="inline-height-note" class="hidden text-[10px] text-amber-400 italic">Ignored in 'inline'</span>
+            </div>
+          </div>
+
+          <!-- CORNER RADIUS SLIDER -->
+          <div class="flex flex-col gap-1 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="flex justify-between items-center text-xs font-medium">
+              <span class="text-slate-300 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m12-4v2a2 2 0 01-2 2h-2m2-12V6a2 2 0 00-2-2h-2" />
+                </svg>
+                Border Radius (Corner Radius)
+              </span>
+              <span id="radius-val" class="font-mono text-indigo-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-xs">8px</span>
+            </div>
+            <input type="range" id="slider-radius" min="0" max="60" value="8" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+          </div>
+
+          <!-- PADDING TRBL SECTION -->
+          <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Padding (TRBL)
+              </span>
+              <label class="flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer hover:text-emerald-300 transition select-none">
+                <input type="checkbox" id="sync-padding" checked class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0">
+                <span>Sync All Sides</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 pt-1 text-[11px]">
+              <!-- Top -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Top:</span>
+                  <span id="pad-top-val" class="text-emerald-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-pad-top" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500">
+              </div>
+              <!-- Right -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Right:</span>
+                  <span id="pad-right-val" class="text-emerald-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-pad-right" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500">
+              </div>
+              <!-- Bottom -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Bottom:</span>
+                  <span id="pad-bottom-val" class="text-emerald-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-pad-bottom" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500">
+              </div>
+              <!-- Left -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Left:</span>
+                  <span id="pad-left-val" class="text-emerald-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-pad-left" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- BORDER WIDTH TRBL SECTION -->
+          <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Border Width (TRBL)
+              </span>
+              <label class="flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer hover:text-amber-300 transition select-none">
+                <input type="checkbox" id="sync-border" checked class="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0">
+                <span>Sync All Sides</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 pt-1 text-[11px]">
+              <!-- Top -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Top:</span>
+                  <span id="border-top-val" class="text-amber-300 font-bold">6px</span>
+                </div>
+                <input type="range" id="slider-border-top" min="0" max="30" value="6" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-amber-500">
+              </div>
+              <!-- Right -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Right:</span>
+                  <span id="border-right-val" class="text-amber-300 font-bold">6px</span>
+                </div>
+                <input type="range" id="slider-border-right" min="0" max="30" value="6" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-amber-500">
+              </div>
+              <!-- Bottom -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Bottom:</span>
+                  <span id="border-bottom-val" class="text-amber-300 font-bold">6px</span>
+                </div>
+                <input type="range" id="slider-border-bottom" min="0" max="30" value="6" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-amber-500">
+              </div>
+              <!-- Left -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Left:</span>
+                  <span id="border-left-val" class="text-amber-300 font-bold">6px</span>
+                </div>
+                <input type="range" id="slider-border-left" min="0" max="30" value="6" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-amber-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- MARGIN TRBL SECTION -->
+          <div class="bg-orange-950/20 border border-orange-500/30 rounded-xl p-3 flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-orange-300 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> Margin (TRBL)
+              </span>
+              <label class="flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer hover:text-orange-300 transition select-none">
+                <input type="checkbox" id="sync-margin" checked class="rounded bg-slate-800 border-slate-700 text-orange-500 focus:ring-0">
+                <span>Sync All Sides</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 pt-1 text-[11px]">
+              <!-- Top -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Top:</span>
+                  <span id="margin-top-val" class="text-orange-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-margin-top" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-orange-500">
+              </div>
+              <!-- Right -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Right:</span>
+                  <span id="margin-right-val" class="text-orange-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-margin-right" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-orange-500">
+              </div>
+              <!-- Bottom -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Bottom:</span>
+                  <span id="margin-bottom-val" class="text-orange-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-margin-bottom" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-orange-500">
+              </div>
+              <!-- Left -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between font-mono text-slate-400">
+                  <span>Left:</span>
+                  <span id="margin-left-val" class="text-orange-300 font-bold">20px</span>
+                </div>
+                <input type="range" id="slider-margin-left" min="0" max="60" value="20" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-orange-500">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Card 4: Dynamic Educational Insights & Display Rules -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl p-5 flex flex-col gap-3">
+        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Display Mode Behavior Guide
+        </h3>
+
+        <!-- Dynamic Context Box -->
+        <div id="guide-box" class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-2">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Property Matrix Comparison Table -->
+        <div class="overflow-x-auto rounded-lg border border-slate-800 mt-1">
+          <table class="w-full text-[11px] text-left text-slate-300 font-mono">
+            <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase border-b border-slate-800">
+              <tr>
+                <th class="p-2">Property</th>
+                <th class="p-2">block</th>
+                <th class="p-2">inline-block</th>
+                <th class="p-2">inline</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 bg-slate-950">
+              <tr>
+                <td class="p-2 font-bold text-slate-200">Line Break</td>
+                <td class="p-2 text-emerald-400">Yes (New line)</td>
+                <td class="p-2 text-slate-400">No (Inline flow)</td>
+                <td class="p-2 text-slate-400">No (Inline flow)</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-bold text-slate-200">Width / Height</td>
+                <td class="p-2 text-emerald-400">Respected</td>
+                <td class="p-2 text-emerald-400">Respected</td>
+                <td class="p-2 text-rose-400">Ignored</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-bold text-slate-200">Vert. Margin/Padding</td>
+                <td class="p-2 text-emerald-400">Pushes layout</td>
+                <td class="p-2 text-emerald-400">Pushes layout</td>
+                <td class="p-2 text-amber-400">Visual only*</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // DOM Element References
+    const box1 = document.getElementById('box1');
+    const box2 = document.getElementById('box2');
+    const marginOverlay = document.getElementById('margin-overlay');
+    const previewArena = document.getElementById('preview-arena');
+
+    // Controls
+    const displaySelect = document.getElementById('display-select');
+    const boxSizingSelect = document.getElementById('box-sizing-select');
+    const presetSelect = document.getElementById('preset-select');
+
+    // Dimension & Radius Sliders
+    const sliderWidth = document.getElementById('slider-width');
+    const sliderHeight = document.getElementById('slider-height');
+    const sliderRadius = document.getElementById('slider-radius');
+
+    // Sync Checkboxes
+    const syncPadding = document.getElementById('sync-padding');
+    const syncBorder = document.getElementById('sync-border');
+    const syncMargin = document.getElementById('sync-margin');
+
+    // Padding TRBL Sliders & Labels
+    const padSliders = {
+      top: document.getElementById('slider-pad-top'),
+      right: document.getElementById('slider-pad-right'),
+      bottom: document.getElementById('slider-pad-bottom'),
+      left: document.getElementById('slider-pad-left')
+    };
+    const padLabels = {
+      top: document.getElementById('pad-top-val'),
+      right: document.getElementById('pad-right-val'),
+      bottom: document.getElementById('pad-bottom-val'),
+      left: document.getElementById('pad-left-val')
+    };
+
+    // Border TRBL Sliders & Labels
+    const borderSliders = {
+      top: document.getElementById('slider-border-top'),
+      right: document.getElementById('slider-border-right'),
+      bottom: document.getElementById('slider-border-bottom'),
+      left: document.getElementById('slider-border-left')
+    };
+    const borderLabels = {
+      top: document.getElementById('border-top-val'),
+      right: document.getElementById('border-right-val'),
+      bottom: document.getElementById('border-bottom-val'),
+      left: document.getElementById('border-left-val')
+    };
+
+    // Margin TRBL Sliders & Labels
+    const marginSliders = {
+      top: document.getElementById('slider-margin-top'),
+      right: document.getElementById('slider-margin-right'),
+      bottom: document.getElementById('slider-margin-bottom'),
+      left: document.getElementById('slider-margin-left')
+    };
+    const marginLabels = {
+      top: document.getElementById('margin-top-val'),
+      right: document.getElementById('margin-right-val'),
+      bottom: document.getElementById('margin-bottom-val'),
+      left: document.getElementById('margin-left-val')
+    };
+
+    // Main Labels & Indicators
+    const widthVal = document.getElementById('width-val');
+    const heightVal = document.getElementById('height-val');
+    const radiusVal = document.getElementById('radius-val');
+
+    const displayPill = document.getElementById('display-pill');
+    const sizingPill = document.getElementById('sizing-pill');
+    const flowStateBadge = document.getElementById('flow-state-badge');
+    const boxSizingBadge = document.getElementById('box-sizing-badge');
+    const box1DimLabel = document.getElementById('box1-dim-label');
+
+    // DevTools TRBL Edge Diagram Elements
+    const dtMargin = {
+      top: document.getElementById('dt-margin-top'),
+      right: document.getElementById('dt-margin-right'),
+      bottom: document.getElementById('dt-margin-bottom'),
+      left: document.getElementById('dt-margin-left')
+    };
+    const dtBorder = {
+      top: document.getElementById('dt-border-top'),
+      right: document.getElementById('dt-border-right'),
+      bottom: document.getElementById('dt-border-bottom'),
+      left: document.getElementById('dt-border-left')
+    };
+    const dtPadding = {
+      top: document.getElementById('dt-padding-top'),
+      right: document.getElementById('dt-padding-right'),
+      bottom: document.getElementById('dt-padding-bottom'),
+      left: document.getElementById('dt-padding-left')
+    };
+
+    const dtRadiusVal = document.getElementById('dt-radius-val');
+    const dtContentDim = document.getElementById('dt-content-dim');
+    const dtInlineWarning = document.getElementById('dt-inline-warning');
+    const totalWidthFormula = document.getElementById('total-width-formula');
+    const totalHeightFormula = document.getElementById('total-height-formula');
+
+    // Notes & Warnings
+    const inlineWidthNote = document.getElementById('inline-width-note');
+    const inlineHeightNote = document.getElementById('inline-height-note');
+    const widthSliderGroup = document.getElementById('width-slider-group');
+    const heightSliderGroup = document.getElementById('height-slider-group');
+    const guideBox = document.getElementById('guide-box');
+
+    // Toggles
+    const toggleMarginOverlay = document.getElementById('toggle-margin-overlay');
+    const toggleFlowText = document.getElementById('toggle-flow-text');
+    const leadText = document.getElementById('lead-text');
+    const trailText = document.getElementById('trail-text');
+
+    /**
+     * Helper to sync sister TRBL sliders when "Sync All Sides" checkbox is active
+     */
+    function handleSync(groupSliders, changedSide, isSynced) {
+      if (!isSynced) return;
+      const val = groupSliders[changedSide].value;
+      ['top', 'right', 'bottom', 'left'].forEach(side => {
+        groupSliders[side].value = val;
+      });
+    }
+
+    /**
+     * Updates Box 1 inline styles and synchronizes metrics across all viewports
+     */
+    function updateBoxModel() {
+      const display = displaySelect.value;
+      const boxSizing = boxSizingSelect.value;
+      const width = parseInt(sliderWidth.value);
+      const height = parseInt(sliderHeight.value);
+      const radius = parseInt(sliderRadius.value);
+
+      // Extract Padding values
+      const pad = {
+        top: parseInt(padSliders.top.value),
+        right: parseInt(padSliders.right.value),
+        bottom: parseInt(padSliders.bottom.value),
+        left: parseInt(padSliders.left.value)
+      };
+
+      // Extract Border values
+      const border = {
+        top: parseInt(borderSliders.top.value),
+        right: parseInt(borderSliders.right.value),
+        bottom: parseInt(borderSliders.bottom.value),
+        left: parseInt(borderSliders.left.value)
+      };
+
+      // Extract Margin values
+      const margin = {
+        top: parseInt(marginSliders.top.value),
+        right: parseInt(marginSliders.right.value),
+        bottom: parseInt(marginSliders.bottom.value),
+        left: parseInt(marginSliders.left.value)
+      };
+
+      // 1. Apply Styles to Box 1
+      box1.style.display = display;
+      box1.style.boxSizing = boxSizing;
+      box1.style.width = width + 'px';
+      box1.style.height = height + 'px';
+      box1.style.borderRadius = radius + 'px';
+
+      box1.style.paddingTop = pad.top + 'px';
+      box1.style.paddingRight = pad.right + 'px';
+      box1.style.paddingBottom = pad.bottom + 'px';
+      box1.style.paddingLeft = pad.left + 'px';
+
+      box1.style.borderTopWidth = border.top + 'px';
+      box1.style.borderRightWidth = border.right + 'px';
+      box1.style.borderBottomWidth = border.bottom + 'px';
+      box1.style.borderLeftWidth = border.left + 'px';
+
+      box1.style.marginTop = margin.top + 'px';
+      box1.style.marginRight = margin.right + 'px';
+      box1.style.marginBottom = margin.bottom + 'px';
+      box1.style.marginLeft = margin.left + 'px';
+
+      // 2. Update Text Labels
+      widthVal.textContent = width + 'px';
+      heightVal.textContent = height + 'px';
+      radiusVal.textContent = radius + 'px';
+
+      ['top', 'right', 'bottom', 'left'].forEach(side => {
+        padLabels[side].textContent = pad[side] + 'px';
+        borderLabels[side].textContent = border[side] + 'px';
+        marginLabels[side].textContent = margin[side] + 'px';
+
+        dtPadding[side].textContent = pad[side];
+        dtBorder[side].textContent = border[side];
+        dtMargin[side].textContent = margin[side];
+      });
+
+      dtRadiusVal.textContent = `r: ${radius}px`;
+
+      // 3. Handle Inline Mode UI Cases
+      const isInline = (display === 'inline');
+
+      if (isInline) {
+        inlineWidthNote.classList.remove('hidden');
+        inlineHeightNote.classList.remove('hidden');
+        widthSliderGroup.classList.add('opacity-50');
+        heightSliderGroup.classList.add('opacity-50');
+        dtInlineWarning.classList.remove('hidden');
+      } else {
+        inlineWidthNote.classList.add('hidden');
+        inlineHeightNote.classList.add('hidden');
+        widthSliderGroup.classList.remove('opacity-50');
+        heightSliderGroup.classList.remove('opacity-50');
+        dtInlineWarning.classList.add('hidden');
+      }
+
+      // 4. Update Header Badges
+      displayPill.textContent = display;
+      sizingPill.textContent = boxSizing;
+      flowStateBadge.textContent = 'display: ' + display;
+      boxSizingBadge.innerHTML = 'box-sizing: <span class="text-amber-300 font-semibold">' + boxSizing + '</span>';
+
+      // 5. Read computed inner dimensions
+      const computed = window.getComputedStyle(box1);
+      const computedW = Math.round(parseFloat(computed.width));
+      const computedH = Math.round(parseFloat(computed.height));
+
+      dtContentDim.textContent = `${computedW}px × ${computedH}px`;
+      box1DimLabel.textContent = `${computedW}px × ${computedH}px`;
+
+      // 6. Calculate Rendered Total Layout Width & Height Breakdown
+      const totalPadH = pad.left + pad.right;
+      const totalBorderH = border.left + border.right;
+      const totalPadV = pad.top + pad.bottom;
+      const totalBorderV = border.top + border.bottom;
+
+      if (boxSizing === 'content-box') {
+        const totalW = (isInline ? computedW : width) + totalPadH + totalBorderH;
+        const totalH = (isInline ? computedH : height) + totalPadV + totalBorderV;
+
+        totalWidthFormula.innerHTML = `${width} + ${totalPadH} (pad) + ${totalBorderH} (border) = <span class="text-emerald-400 underline">${totalW}px</span>`;
+        totalHeightFormula.innerHTML = `${height} + ${totalPadV} (pad) + ${totalBorderV} (border) = ${totalH}px`;
+      } else {
+        // border-box mode
+        const innerW = Math.max(0, width - totalPadH - totalBorderH);
+        const innerH = Math.max(0, height - totalPadV - totalBorderV);
+
+        totalWidthFormula.innerHTML = `${width} - [${totalPadH} pad + ${totalBorderH} border] = Content ${innerW}px`;
+        totalHeightFormula.innerHTML = `${height} - [${totalPadV} pad + ${totalBorderV} border] = Content ${innerH}px`;
+      }
+
+      // 7. Dynamic Educational Text
+      updateGuideText(display, boxSizing);
+
+      // 8. Re-align Margin Highlight Overlay
+      syncMarginOverlay();
+    }
+
+    /**
+     * Synchronizes the absolute visual overlay rectangle with Box 1's margin boundaries & border-radius
+     */
+    function syncMarginOverlay() {
+      if (!toggleMarginOverlay.checked) {
+        marginOverlay.style.display = 'none';
+        return;
+      }
+
+      marginOverlay.style.display = 'block';
+
+      // Position margin overlay exactly around Box 1
+      const boxRect = box1.getBoundingClientRect();
+      const arenaRect = previewArena.getBoundingClientRect();
+
+      const marginTop = parseFloat(window.getComputedStyle(box1).marginTop) || 0;
+      const marginRight = parseFloat(window.getComputedStyle(box1).marginRight) || 0;
+      const marginBottom = parseFloat(window.getComputedStyle(box1).marginBottom) || 0;
+      const marginLeft = parseFloat(window.getComputedStyle(box1).marginLeft) || 0;
+
+      // Relative coordinates inside scrollable arena
+      const top = boxRect.top - arenaRect.top + previewArena.scrollTop - marginTop;
+      const left = boxRect.left - arenaRect.left + previewArena.scrollLeft - marginLeft;
+      const width = boxRect.width + marginLeft + marginRight;
+      const height = boxRect.height + marginTop + marginBottom;
+
+      marginOverlay.style.top = `${top}px`;
+      marginOverlay.style.left = `${left}px`;
+      marginOverlay.style.width = `${width}px`;
+      marginOverlay.style.height = `${height}px`;
+      
+      const rad = parseInt(sliderRadius.value);
+      marginOverlay.style.borderRadius = `${rad + 4}px`;
+    }
+
+    /**
+     * Generates responsive learning tips based on current state
+     */
+    function updateGuideText(display, boxSizing) {
+      if (display === 'block') {
+        guideBox.innerHTML = `
+          <p class="font-bold text-blue-400">📦 display: block</p>
+          <p>• <strong>Box 1</strong> breaks onto its own line and respects all vertical/horizontal padding, margins, and borders.</p>
+          <p>• Notice how <strong>border-radius (${sliderRadius.value}px)</strong> clips padding and content backgrounds seamlessly!</p>
+        `;
+      } else if (display === 'inline-block') {
+        guideBox.innerHTML = `
+          <p class="font-bold text-blue-400">🃏 display: inline-block</p>
+          <p>• <strong>Box 1</strong> sits inline next to <strong>Box 2</strong> while respecting custom per-side padding, margins, and border widths!</p>
+        `;
+      } else if (display === 'inline') {
+        guideBox.innerHTML = `
+          <p class="font-bold text-amber-400">🏷️ display: inline</p>
+          <p>• <strong>Box 1</strong> flows directly inside line text. <strong class="text-rose-400">Width and Height sliders are ignored by CSS!</strong></p>
+          <p>• Vertical padding and borders render visually but do <em>not</em> push adjacent line height.</p>
+        `;
+      }
+
+      if (boxSizing === 'border-box') {
+        guideBox.innerHTML += `
+          <div class="mt-2 pt-2 border-t border-slate-800 text-amber-300">
+            <strong>📐 box-sizing: border-box active:</strong> Total width (${sliderWidth.value}px) includes content + padding + border altogether.
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Preset Configurations
+     */
+    presetSelect.addEventListener('change', (e) => {
+      const preset = e.target.value;
+      if (preset === 'default-block') {
+        displaySelect.value = 'block';
+        boxSizingSelect.value = 'content-box';
+        sliderWidth.value = 220;
+        sliderHeight.value = 110;
+        sliderRadius.value = 8;
+        ['top', 'right', 'bottom', 'left'].forEach(s => {
+          padSliders[s].value = 20;
+          borderSliders[s].value = 6;
+          marginSliders[s].value = 20;
+        });
+      } else if (preset === 'asymmetric-padding') {
+        displaySelect.value = 'block';
+        boxSizingSelect.value = 'content-box';
+        sliderWidth.value = 240;
+        sliderHeight.value = 120;
+        sliderRadius.value = 12;
+
+        padSliders.top.value = 10;
+        padSliders.right.value = 40;
+        padSliders.bottom.value = 25;
+        padSliders.left.value = 15;
+
+        borderSliders.top.value = 2;
+        borderSliders.right.value = 8;
+        borderSliders.bottom.value = 2;
+        borderSliders.left.value = 12;
+
+        marginSliders.top.value = 15;
+        marginSliders.right.value = 30;
+        marginSliders.bottom.value = 15;
+        marginSliders.left.value = 10;
+      } else if (preset === 'rounded-pill') {
+        displaySelect.value = 'inline-block';
+        boxSizingSelect.value = 'border-box';
+        sliderWidth.value = 200;
+        sliderHeight.value = 60;
+        sliderRadius.value = 30;
+
+        ['top', 'bottom'].forEach(s => { padSliders[s].value = 12; });
+        ['left', 'right'].forEach(s => { padSliders[s].value = 28; });
+        ['top', 'right', 'bottom', 'left'].forEach(s => {
+          borderSliders[s].value = 4;
+          marginSliders[s].value = 12;
+        });
+      } else if (preset === 'inline-badge') {
+        displaySelect.value = 'inline';
+        boxSizingSelect.value = 'content-box';
+        sliderWidth.value = 180;
+        sliderHeight.value = 80;
+        sliderRadius.value = 6;
+        ['top', 'right', 'bottom', 'left'].forEach(s => {
+          padSliders[s].value = 10;
+          borderSliders[s].value = 3;
+          marginSliders[s].value = 8;
+        });
+      } else if (preset === 'inline-block-card') {
+        displaySelect.value = 'inline-block';
+        boxSizingSelect.value = 'content-box';
+        sliderWidth.value = 160;
+        sliderHeight.value = 100;
+        sliderRadius.value = 10;
+        ['top', 'right', 'bottom', 'left'].forEach(s => {
+          padSliders[s].value = 16;
+          borderSliders[s].value = 4;
+          marginSliders[s].value = 15;
+        });
+      } else if (preset === 'border-box-compare') {
+        displaySelect.value = 'inline-block';
+        boxSizingSelect.value = 'border-box';
+        sliderWidth.value = 240;
+        sliderHeight.value = 120;
+        sliderRadius.value = 8;
+        ['top', 'right', 'bottom', 'left'].forEach(s => {
+          padSliders[s].value = 30;
+          borderSliders[s].value = 12;
+          marginSliders[s].value = 15;
+        });
+      }
+      updateBoxModel();
+      presetSelect.value = '';
+    });
+
+    // TRBL Event Listener Wiring
+    ['top', 'right', 'bottom', 'left'].forEach(side => {
+      // Padding
+      padSliders[side].addEventListener('input', () => {
+        handleSync(padSliders, side, syncPadding.checked);
+        updateBoxModel();
+      });
+      // Border
+      borderSliders[side].addEventListener('input', () => {
+        handleSync(borderSliders, side, syncBorder.checked);
+        updateBoxModel();
+      });
+      // Margin
+      marginSliders[side].addEventListener('input', () => {
+        handleSync(marginSliders, side, syncMargin.checked);
+        updateBoxModel();
+      });
+    });
+
+    // General Controls
+    [displaySelect, boxSizingSelect, sliderWidth, sliderHeight, sliderRadius].forEach(element => {
+      element.addEventListener('input', updateBoxModel);
+      element.addEventListener('change', updateBoxModel);
+    });
+
+    // Sync Checkboxes change events
+    [syncPadding, syncBorder, syncMargin].forEach(chk => chk.addEventListener('change', updateBoxModel));
+
+    // Toggle options
+    toggleMarginOverlay.addEventListener('change', syncMarginOverlay);
+    toggleFlowText.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        leadText.classList.remove('opacity-0', 'pointer-events-none');
+        trailText.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        leadText.classList.add('opacity-0', 'pointer-events-none');
+        trailText.classList.add('opacity-0', 'pointer-events-none');
+      }
+      setTimeout(syncMarginOverlay, 50);
+    });
+
+    // Resize observer to keep margin overlay aligned during window resizes
+    window.addEventListener('resize', syncMarginOverlay);
+    previewArena.addEventListener('scroll', syncMarginOverlay);
+
+    // Initial render on load
+    window.onload = function() {
+      updateBoxModel();
+    };
+  </script>
+</body>
+</html>
