@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Flexbox & Grid Interactive Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for control panels and code viewer */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Grid pattern background for live canvas */
+    .bg-grid-pattern {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+
+    /* Animated highlight for active selected child item */
+    .item-selected {
+      outline: 3px solid #6366f1 !important;
+      outline-offset: 2px;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Transitions for smooth layout morphing */
+    #layout-container {
+      transition: all 0.25s ease-in-out;
+    }
+    .grid-item-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Toast notification keyframe */
+    @keyframes toastIn {
+      from { transform: translateY(100%) scale(0.9); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .toast-animate {
+      animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-x-hidden antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header Bar -->
+  <header class="bg-slate-950 border-b border-slate-800 px-4 py-3 sm:px-6 sticky top-0 z-30 shadow-lg">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      
+      <!-- Title & Icon -->
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl text-white shadow-md shadow-indigo-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight leading-none flex items-center gap-2">
+            CSS Flexbox & Grid Lab
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Interactive</span>
+          </h1>
+          <p class="text-xs text-slate-400 mt-1">Real-time container & item CSS layout generator</p>
+        </div>
+      </div>
+
+      <!-- Quick Preset Selector & Actions -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800 text-xs">
+          <span class="text-slate-400 font-medium">Presets:</span>
+          <select id="preset-select" class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer">
+            <option value="" disabled selected>✨ Choose Pattern...</option>
+            <option value="flex-center">🎯 Flex Centered Card</option>
+            <option value="flex-row-space">↔️ Flex Row Space-Between</option>
+            <option value="flex-wrap-gallery">🖼️ Flex Wrap Responsive Grid</option>
+            <option value="grid-3col">📐 Grid 3 Equal Columns</option>
+            <option value="grid-auto-fit">📱 Grid Auto-Fit Responsive</option>
+            <option value="grid-sidebar">📖 Grid Sidebar + Content Layout</option>
+            <option value="block-normal">📄 Standard Block Flow</option>
+          </select>
+        </div>
+
+        <button id="reset-btn" class="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Reset All
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Application Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Live Canvas & Code Inspector (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Interactive Canvas Card -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+        
+        <!-- Canvas Bar Header -->
+        <div class="px-5 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h2 class="text-sm font-semibold text-slate-200">Layout Canvas</h2>
+            <span id="active-mode-badge" class="ml-2 text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/50">
+              display: flex
+            </span>
+          </div>
+
+          <!-- Item Controls & Helpers -->
+          <div class="flex items-center gap-3 text-xs">
+            <!-- Item Count Buttons -->
+            <div class="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
+              <button id="remove-item-btn" title="Remove item" class="px-2 py-1 text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded font-bold transition">
+                -
+              </button>
+              <span id="item-count-label" class="px-2 font-mono text-slate-200 font-semibold">5 items</span>
+              <button id="add-item-btn" title="Add item" class="px-2 py-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-900 rounded font-bold transition">
+                +
+              </button>
+            </div>
+
+            <!-- Visual Guides Toggle -->
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200 transition select-none">
+              <input type="checkbox" id="toggle-guides" checked class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+              <span>Show Axis/Grid</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Playground Viewport -->
+        <div id="canvas-viewport" class="relative p-6 bg-slate-900/60 bg-grid-pattern min-h-[380px] sm:min-h-[420px] flex flex-col justify-center items-stretch overflow-auto">
+          
+          <!-- Direction/Axis Guide Overlay -->
+          <div id="axis-guide" class="absolute top-3 left-4 flex items-center gap-2 text-[11px] font-mono text-indigo-400/80 pointer-events-none transition-all">
+            <svg class="w-4 h-4 transform rotate-0 transition-transform" id="axis-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+            <span id="axis-label">Main Axis: Row →</span>
+          </div>
+
+          <!-- THE CONTAINER UNDER TEST -->
+          <div id="layout-container" 
+               class="w-full min-h-[280px] p-4 bg-slate-950/80 border-2 border-indigo-500/40 rounded-2xl shadow-inner relative"
+               style="display: flex; flex-direction: row; justify-content: flex-start; align-items: stretch; gap: 16px;">
+            
+            <!-- Default 5 items injected dynamically by JS -->
+
+          </div>
+
+        </div>
+
+        <!-- Canvas Footer Tip -->
+        <div class="px-5 py-2.5 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
+          <span class="flex items-center gap-1.5 text-slate-400">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+            Tip: Click any item to customize its individual CSS properties
+          </span>
+          <span id="selected-item-tag" class="text-indigo-400 font-semibold">Selected: None</span>
+        </div>
+
+      </div>
+
+      <!-- CSS Code Inspector & Exporter -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            <h3 class="text-sm font-semibold text-slate-200">Generated CSS Code</h3>
+          </div>
+
+          <button id="copy-css-btn" class="px-3 py-1 text-xs font-mono font-medium text-emerald-400 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/50 rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <span>Copy CSS</span>
+          </button>
+        </div>
+
+        <div class="p-4 bg-slate-900/90 font-mono text-xs overflow-x-auto text-slate-300 leading-relaxed">
+          <pre id="css-output-code" class="text-indigo-200"><code class="language-css">/* Container Styles */
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 16px;
+}</code></pre>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Control Panel (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
+      <!-- Main Controls Card -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl p-5 flex flex-col gap-5">
+        
+        <!-- Controls Section Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Container Layout Controls
+          </h2>
+        </div>
+
+        <!-- 1. DISPLAY SELECT (CORE CONTROL) -->
+        <div class="flex flex-col gap-1.5 bg-indigo-950/20 p-3 rounded-xl border border-indigo-500/30">
+          <label for="select-display" class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center justify-between">
+            <span>display</span>
+            <span class="text-[10px] text-slate-400 font-mono font-normal">Primary Mode</span>
+          </label>
+          <select id="select-display" class="bg-slate-900 border border-indigo-500/50 rounded-xl px-3 py-2 text-sm text-indigo-200 font-mono font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-pointer">
+            <option value="flex" selected>flex</option>
+            <option value="grid">grid</option>
+            <option value="block">block</option>
+          </select>
+        </div>
+
+        <!-- 2. FLEXBOX SPECIFIC CONTROLS GROUP -->
+        <div id="flex-controls-group" class="space-y-4 transition-all">
+          
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            Flexbox Properties
+          </div>
+
+          <!-- flex-direction -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-flex-direction" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>flex-direction</span>
+              <span class="text-[10px] font-mono text-slate-400">Main Axis</span>
+            </label>
+            <select id="select-flex-direction" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
+              <option value="row" selected>row (horizontal →)</option>
+              <option value="column">column (vertical ↓)</option>
+              <option value="row-reverse">row-reverse (← horizontal)</option>
+              <option value="column-reverse">column-reverse (↑ vertical)</option>
+            </select>
+          </div>
+
+          <!-- flex-wrap -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-flex-wrap" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>flex-wrap</span>
+              <span class="text-[10px] font-mono text-slate-400">Line wrapping</span>
+            </label>
+            <select id="select-flex-wrap" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
+              <option value="nowrap" selected>nowrap</option>
+              <option value="wrap">wrap</option>
+              <option value="wrap-reverse">wrap-reverse</option>
+            </select>
+          </div>
+
+          <!-- justify-content -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-justify-content" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>justify-content</span>
+              <span class="text-[10px] font-mono text-slate-400">Main axis alignment</span>
+            </label>
+            <select id="select-justify-content" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
+              <option value="flex-start" selected>flex-start</option>
+              <option value="center">center</option>
+              <option value="flex-end">flex-end</option>
+              <option value="space-between">space-between</option>
+              <option value="space-around">space-around</option>
+              <option value="space-evenly">space-evenly</option>
+            </select>
+          </div>
+
+          <!-- align-items -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-align-items" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>align-items</span>
+              <span class="text-[10px] font-mono text-slate-400">Cross axis alignment</span>
+            </label>
+            <select id="select-align-items" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
+              <option value="stretch" selected>stretch</option>
+              <option value="flex-start">flex-start</option>
+              <option value="center">center</option>
+              <option value="flex-end">flex-end</option>
+              <option value="baseline">baseline</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- 3. GRID SPECIFIC CONTROLS GROUP -->
+        <div id="grid-controls-group" class="space-y-4 transition-all hidden">
+          
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+            Grid Properties
+          </div>
+
+          <!-- grid-template-columns -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-grid-template-columns" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>grid-template-columns</span>
+              <span class="text-[10px] font-mono text-slate-400">Tracks</span>
+            </label>
+            <select id="select-grid-template-columns" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-violet-500 transition cursor-pointer">
+              <option value="1fr 1fr">1fr 1fr (2 Equal Columns)</option>
+              <option value="1fr 1fr 1fr" selected>1fr 1fr 1fr (3 Equal Columns)</option>
+              <option value="1fr 2fr 1fr">1fr 2fr 1fr (Wide Center)</option>
+              <option value="repeat(auto-fit, minmax(120px, 1fr))">repeat(auto-fit, minmax(120px, 1fr))</option>
+              <option value="120px 1fr 120px">120px 1fr 120px (Fixed Sides)</option>
+              <option value="repeat(4, 1fr)">repeat(4, 1fr) (4 Columns)</option>
+            </select>
+          </div>
+
+          <!-- justify-items (grid) -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-grid-justify-items" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>justify-items</span>
+              <span class="text-[10px] font-mono text-slate-400">Inline axis</span>
+            </label>
+            <select id="select-grid-justify-items" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-violet-500 transition cursor-pointer">
+              <option value="stretch" selected>stretch</option>
+              <option value="start">start</option>
+              <option value="center">center</option>
+              <option value="end">end</option>
+            </select>
+          </div>
+
+          <!-- align-items (grid) -->
+          <div class="flex flex-col gap-1.5">
+            <label for="select-grid-align-items" class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>align-items (grid)</span>
+              <span class="text-[10px] font-mono text-slate-400">Block axis</span>
+            </label>
+            <select id="select-grid-align-items" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:ring-2 focus:ring-violet-500 transition cursor-pointer">
+              <option value="stretch" selected>stretch</option>
+              <option value="start">start</option>
+              <option value="center">center</option>
+              <option value="end">end</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Block Mode Warning / Note -->
+        <div id="block-note-group" class="hidden bg-amber-950/20 border border-amber-500/30 p-3 rounded-xl text-xs text-amber-300 space-y-1">
+          <p class="font-bold flex items-center gap-1.5">
+            <span>ℹ️ display: block mode</span>
+          </p>
+          <p class="text-[11px] text-amber-200/80">Child div elements follow natural document flow (stacking vertically as full-width blocks).</p>
+        </div>
+
+        <!-- 4. COMMON CONTAINER PROPERTIES (GAP & PADDING) -->
+        <div class="space-y-3 pt-2 border-t border-slate-800">
+          
+          <!-- Gap Control -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-300">gap (Item Spacing)</span>
+              <span id="gap-val" class="font-mono text-indigo-400 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-[11px]">16px</span>
+            </div>
+            <input type="range" id="slider-gap" min="0" max="48" value="16" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+          </div>
+
+          <!-- Min-Height Control -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-300">container min-height</span>
+              <span id="minheight-val" class="font-mono text-slate-400 font-medium bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-[11px]">280px</span>
+            </div>
+            <input type="range" id="slider-minheight" min="180" max="500" value="280" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Item Specific Customizer Card -->
+      <div id="item-inspector-card" class="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl p-5 flex flex-col gap-4">
+        
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Selected Item Inspector
+          </h3>
+          <span id="selected-item-title" class="text-xs font-mono px-2 py-0.5 rounded bg-violet-950 text-violet-300 border border-violet-800 font-bold">
+            Item 1
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- flex-grow -->
+          <div class="flex flex-col gap-1">
+            <label for="slider-item-grow" class="text-[11px] font-semibold text-slate-300 flex justify-between">
+              <span>flex-grow</span>
+              <span id="item-grow-val" class="font-mono text-violet-400">0</span>
+            </label>
+            <input type="range" id="slider-item-grow" min="0" max="5" value="0" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-violet-500">
+          </div>
+
+          <!-- flex-shrink -->
+          <div class="flex flex-col gap-1">
+            <label for="slider-item-shrink" class="text-[11px] font-semibold text-slate-300 flex justify-between">
+              <span>flex-shrink</span>
+              <span id="item-shrink-val" class="font-mono text-violet-400">1</span>
+            </label>
+            <input type="range" id="slider-item-shrink" min="0" max="5" value="1" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-violet-500">
+          </div>
+
+          <!-- align-self -->
+          <div class="flex flex-col gap-1 col-span-2">
+            <label for="select-item-align-self" class="text-[11px] font-semibold text-slate-300 flex justify-between">
+              <span>align-self</span>
+              <span class="text-[10px] text-slate-500">Override container</span>
+            </label>
+            <select id="select-item-align-self" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:ring-1 focus:ring-violet-500">
+              <option value="auto">auto</option>
+              <option value="flex-start">flex-start / start</option>
+              <option value="center">center</option>
+              <option value="flex-end">flex-end / end</option>
+              <option value="stretch">stretch</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+  <script>
+    // State Management
+    let itemCount = 5;
+    let selectedItemIndex = 0; // 0-indexed
+
+    // Array of item colors for distinct visual representation
+    const itemColors = [
+      { bg: 'bg-indigo-900/60', border: 'border-indigo-500/60', text: 'text-indigo-200', tag: 'bg-indigo-500' },
+      { bg: 'bg-purple-900/60', border: 'border-purple-500/60', text: 'text-purple-200', tag: 'bg-purple-500' },
+      { bg: 'bg-pink-900/60', border: 'border-pink-500/60', text: 'text-pink-200', tag: 'bg-pink-500' },
+      { bg: 'bg-blue-900/60', border: 'border-blue-500/60', text: 'text-blue-200', tag: 'bg-blue-500' },
+      { bg: 'bg-emerald-900/60', border: 'border-emerald-500/60', text: 'text-emerald-200', tag: 'bg-emerald-500' },
+      { bg: 'bg-amber-900/60', border: 'border-amber-500/60', text: 'text-amber-200', tag: 'bg-amber-500' },
+      { bg: 'bg-cyan-900/60', border: 'border-cyan-500/60', text: 'text-cyan-200', tag: 'bg-cyan-500' },
+      { bg: 'bg-rose-900/60', border: 'border-rose-500/60', text: 'text-rose-200', tag: 'bg-rose-500' }
+    ];
+
+    // Store per-item custom properties
+    let itemsData = Array.from({ length: 8 }, (_, i) => ({
+      grow: 0,
+      shrink: 1,
+      alignSelf: 'auto'
+    }));
+
+    // DOM Elements
+    const layoutContainer = document.getElementById('layout-container');
+    const selectDisplay = document.getElementById('select-display');
+    
+    // Flex controls
+    const flexGroup = document.getElementById('flex-controls-group');
+    const selectFlexDirection = document.getElementById('select-flex-direction');
+    const selectFlexWrap = document.getElementById('select-flex-wrap');
+    const selectJustifyContent = document.getElementById('select-justify-content');
+    const selectAlignItems = document.getElementById('select-align-items');
+
+    // Grid controls
+    const gridGroup = document.getElementById('grid-controls-group');
+    const selectGridColumns = document.getElementById('select-grid-template-columns');
+    const selectGridJustifyItems = document.getElementById('select-grid-justify-items');
+    const selectGridAlignItems = document.getElementById('select-grid-align-items');
+
+    // Block note
+    const blockNoteGroup = document.getElementById('block-note-group');
+
+    // Common
+    const sliderGap = document.getElementById('slider-gap');
+    const gapVal = document.getElementById('gap-val');
+    const sliderMinHeight = document.getElementById('slider-minheight');
+    const minHeightVal = document.getElementById('minheight-val');
+
+    // Items count & guides
+    const itemCountLabel = document.getElementById('item-count-label');
+    const addItemBtn = document.getElementById('add-item-btn');
+    const removeItemBtn = document.getElementById('remove-item-btn');
+    const toggleGuides = document.getElementById('toggle-guides');
+    const axisGuide = document.getElementById('axis-guide');
+    const axisArrow = document.getElementById('axis-arrow');
+    const axisLabel = document.getElementById('axis-label');
+    const activeModeBadge = document.getElementById('active-mode-badge');
+    const selectedItemTag = document.getElementById('selected-item-tag');
+
+    // Output & Copy
+    const cssOutputCode = document.getElementById('css-output-code');
+    const copyCssBtn = document.getElementById('copy-css-btn');
+    const presetSelect = document.getElementById('preset-select');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // Item inspector
+    const selectedItemTitle = document.getElementById('selected-item-title');
+    const sliderItemGrow = document.getElementById('slider-item-grow');
+    const itemGrowVal = document.getElementById('item-grow-val');
+    const sliderItemShrink = document.getElementById('slider-item-shrink');
+    const itemShrinkVal = document.getElementById('item-shrink-val');
+    const selectItemAlignSelf = document.getElementById('select-item-align-self');
+
+    /**
+     * Renders child elements inside the layout container
+     */
+    function renderItems() {
+      layoutContainer.innerHTML = '';
+
+      for (let i = 0; i < itemCount; i++) {
+        const item = document.createElement('div');
+        const color = itemColors[i % itemColors.length];
+        const itemData = itemsData[i];
+
+        item.className = `grid-item-card p-4 rounded-xl border-2 ${color.bg} ${color.border} ${color.text} flex flex-col items-center justify-center font-mono cursor-pointer select-none relative shadow-md hover:scale-[1.02]`;
+        if (i === selectedItemIndex) {
+          item.classList.add('item-selected');
+        }
+
+        // Apply item custom inline CSS styles
+        item.style.flexGrow = itemData.grow;
+        item.style.flexShrink = itemData.shrink;
+        item.style.alignSelf = itemData.alignSelf;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-1.5 font-bold text-sm">
+            <span class="w-2.5 h-2.5 rounded-full ${color.tag}"></span>
+            Item ${i + 1}
+          </div>
+          <div class="text-[10px] opacity-75 mt-1 font-sans">
+            ${itemData.grow > 0 ? `grow: ${itemData.grow}` : ''} 
+            ${itemData.alignSelf !== 'auto' ? `self: ${itemData.alignSelf}` : ''}
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          selectedItemIndex = i;
+          renderItems();
+          updateItemInspector();
+        });
+
+        layoutContainer.appendChild(item);
+      }
+
+      itemCountLabel.textContent = `${itemCount} items`;
+      selectedItemTag.textContent = `Selected: Item ${selectedItemIndex + 1}`;
+      selectedItemTitle.textContent = `Item ${selectedItemIndex + 1}`;
+    }
+
+    /**
+     * Synchronizes Selected Item Inspector controls with current item state
+     */
+    function updateItemInspector() {
+      const data = itemsData[selectedItemIndex];
+      sliderItemGrow.value = data.grow;
+      itemGrowVal.textContent = data.grow;
+
+      sliderItemShrink.value = data.shrink;
+      itemShrinkVal.textContent = data.shrink;
+
+      selectItemAlignSelf.value = data.alignSelf;
+    }
+
+    /**
+     * Updates layout container CSS and regenerates CSS code snippet
+     */
+    function updateLayout() {
+      const display = selectDisplay.value;
+      const gap = sliderGap.value + 'px';
+      const minHeight = sliderMinHeight.value + 'px';
+
+      // Update layout container element inline styles
+      layoutContainer.style.display = display;
+      layoutContainer.style.gap = gap;
+      layoutContainer.style.minHeight = minHeight;
+
+      // Handle visibility of display-specific control panels
+      if (display === 'flex') {
+        flexGroup.classList.remove('hidden');
+        gridGroup.classList.add('hidden');
+        blockNoteGroup.classList.add('hidden');
+
+        // Apply flex properties
+        layoutContainer.style.flexDirection = selectFlexDirection.value;
+        layoutContainer.style.flexWrap = selectFlexWrap.value;
+        layoutContainer.style.justifyContent = selectJustifyContent.value;
+        layoutContainer.style.alignItems = selectAlignItems.value;
+
+        // Reset grid-specific properties
+        layoutContainer.style.gridTemplateColumns = '';
+        layoutContainer.style.justifyItems = '';
+
+        activeModeBadge.textContent = 'display: flex';
+        activeModeBadge.className = 'ml-2 text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/50';
+
+        // Update Axis Guide
+        if (toggleGuides.checked) {
+          axisGuide.classList.remove('hidden');
+          const isColumn = selectFlexDirection.value.includes('column');
+          const isReverse = selectFlexDirection.value.includes('reverse');
+
+          if (isColumn) {
+            axisArrow.style.transform = isReverse ? 'rotate(-90deg)' : 'rotate(90deg)';
+            axisLabel.textContent = `Main Axis: Column ${isReverse ? '↑' : '↓'}`;
+          } else {
+            axisArrow.style.transform = isReverse ? 'rotate(180deg)' : 'rotate(0deg)';
+            axisLabel.textContent = `Main Axis: Row ${isReverse ? '←' : '→'}`;
+          }
+        } else {
+          axisGuide.classList.add('hidden');
+        }
+
+      } else if (display === 'grid') {
+        flexGroup.classList.add('hidden');
+        gridGroup.classList.remove('hidden');
+        blockNoteGroup.classList.add('hidden');
+
+        // Apply grid properties
+        layoutContainer.style.gridTemplateColumns = selectGridColumns.value;
+        layoutContainer.style.justifyItems = selectGridJustifyItems.value;
+        layoutContainer.style.alignItems = selectGridAlignItems.value;
+
+        // Reset flex properties
+        layoutContainer.style.flexDirection = '';
+        layoutContainer.style.flexWrap = '';
+        layoutContainer.style.justifyContent = '';
+
+        activeModeBadge.textContent = 'display: grid';
+        activeModeBadge.className = 'ml-2 text-xs font-mono font-bold px-2 py-0.5 rounded bg-violet-950 text-violet-300 border border-violet-700/50';
+
+        axisGuide.classList.add('hidden');
+
+      } else {
+        // Block mode
+        flexGroup.classList.add('hidden');
+        gridGroup.classList.add('hidden');
+        blockNoteGroup.classList.remove('hidden');
+
+        // Clear flex/grid CSS
+        layoutContainer.style.flexDirection = '';
+        layoutContainer.style.flexWrap = '';
+        layoutContainer.style.justifyContent = '';
+        layoutContainer.style.alignItems = '';
+        layoutContainer.style.gridTemplateColumns = '';
+        layoutContainer.style.justifyItems = '';
+
+        activeModeBadge.textContent = 'display: block';
+        activeModeBadge.className = 'ml-2 text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700/50';
+
+        axisGuide.classList.add('hidden');
+      }
+
+      gapVal.textContent = gap;
+      minHeightVal.textContent = minHeight;
+
+      // Generate Formatted CSS
+      generateCssCode(display);
+    }
+
+    /**
+     * Formats and outputs human-readable CSS code for copying
+     */
+    function generateCssCode(display) {
+      let code = `.container {\n  display: ${display};\n`;
+
+      if (display === 'flex') {
+        code += `  flex-direction: ${selectFlexDirection.value};\n`;
+        code += `  flex-wrap: ${selectFlexWrap.value};\n`;
+        code += `  justify-content: ${selectJustifyContent.value};\n`;
+        code += `  align-items: ${selectAlignItems.value};\n`;
+      } else if (display === 'grid') {
+        code += `  grid-template-columns: ${selectGridColumns.value};\n`;
+        code += `  justify-items: ${selectGridJustifyItems.value};\n`;
+        code += `  align-items: ${selectGridAlignItems.value};\n`;
+      }
+
+      code += `  gap: ${sliderGap.value}px;\n`;
+      code += `}\n`;
+
+      // Check if any child item has non-default styles
+      let customItemsCode = '';
+      itemsData.forEach((item, idx) => {
+        if (idx < itemCount && (item.grow !== 0 || item.shrink !== 1 || item.alignSelf !== 'auto')) {
+          customItemsCode += `\n/* Item ${idx + 1} */\n.item-${idx + 1} {\n`;
+          if (item.grow !== 0) customItemsCode += `  flex-grow: ${item.grow};\n`;
+          if (item.shrink !== 1) customItemsCode += `  flex-shrink: ${item.shrink};\n`;
+          if (item.alignSelf !== 'auto') customItemsCode += `  align-self: ${item.alignSelf};\n`;
+          customItemsCode += `}\n`;
+        }
+      });
+
+      cssOutputCode.innerHTML = `<code class="language-css">${escapeHtml(code + customItemsCode)}</code>`;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    /**
+     * Toast Message Helper
+     */
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-animate px-4 py-2.5 bg-slate-900 border border-indigo-500/50 text-indigo-200 text-xs font-mono rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto';
+      toast.innerHTML = `
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // Copy CSS Button Handler
+    copyCssBtn.addEventListener('click', () => {
+      const textToCopy = cssOutputCode.textContent;
+      const textArea = document.createElement('textarea');
+      textArea.value = textToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      showToast('CSS Code copied to clipboard!');
+    });
+
+    // Item Quantity Listeners
+    addItemBtn.addEventListener('click', () => {
+      if (itemCount < 8) {
+        itemCount++;
+        renderItems();
+        updateLayout();
+      } else {
+        showToast('Maximum 8 items limit reached');
+      }
+    });
+
+    removeItemBtn.addEventListener('click', () => {
+      if (itemCount > 1) {
+        itemCount--;
+        if (selectedItemIndex >= itemCount) selectedItemIndex = itemCount - 1;
+        renderItems();
+        updateLayout();
+        updateItemInspector();
+      } else {
+        showToast('At least 1 item is required');
+      }
+    });
+
+    // Item Inspector Input Listeners
+    sliderItemGrow.addEventListener('input', (e) => {
+      itemsData[selectedItemIndex].grow = parseInt(e.target.value);
+      renderItems();
+      updateLayout();
+      updateItemInspector();
+    });
+
+    sliderItemShrink.addEventListener('input', (e) => {
+      itemsData[selectedItemIndex].shrink = parseInt(e.target.value);
+      renderItems();
+      updateLayout();
+      updateItemInspector();
+    });
+
+    selectItemAlignSelf.addEventListener('change', (e) => {
+      itemsData[selectedItemIndex].alignSelf = e.target.value;
+      renderItems();
+      updateLayout();
+    });
+
+    // Preset Selector
+    presetSelect.addEventListener('change', (e) => {
+      const preset = e.target.value;
+
+      if (preset === 'flex-center') {
+        selectDisplay.value = 'flex';
+        selectFlexDirection.value = 'row';
+        selectJustifyContent.value = 'center';
+        selectAlignItems.value = 'center';
+        sliderGap.value = 16;
+        itemCount = 3;
+      } else if (preset === 'flex-row-space') {
+        selectDisplay.value = 'flex';
+        selectFlexDirection.value = 'row';
+        selectJustifyContent.value = 'space-between';
+        selectAlignItems.value = 'center';
+        sliderGap.value = 12;
+        itemCount = 4;
+      } else if (preset === 'flex-wrap-gallery') {
+        selectDisplay.value = 'flex';
+        selectFlexDirection.value = 'row';
+        selectFlexWrap.value = 'wrap';
+        selectJustifyContent.value = 'flex-start';
+        selectAlignItems.value = 'stretch';
+        sliderGap.value = 16;
+        itemCount = 6;
+      } else if (preset === 'grid-3col') {
+        selectDisplay.value = 'grid';
+        selectGridColumns.value = '1fr 1fr 1fr';
+        selectGridJustifyItems.value = 'stretch';
+        selectGridAlignItems.value = 'stretch';
+        sliderGap.value = 16;
+        itemCount = 6;
+      } else if (preset === 'grid-auto-fit') {
+        selectDisplay.value = 'grid';
+        selectGridColumns.value = 'repeat(auto-fit, minmax(120px, 1fr))';
+        selectGridJustifyItems.value = 'stretch';
+        sliderGap.value = 16;
+        itemCount = 5;
+      } else if (preset === 'grid-sidebar') {
+        selectDisplay.value = 'grid';
+        selectGridColumns.value = '120px 1fr 120px';
+        sliderGap.value = 16;
+        itemCount = 3;
+      } else if (preset === 'block-normal') {
+        selectDisplay.value = 'block';
+        sliderGap.value = 12;
+        itemCount = 4;
+      }
+
+      renderItems();
+      updateLayout();
+      presetSelect.value = '';
+      showToast(`Applied "${preset}" preset`);
+    });
+
+    // Reset Button
+    resetBtn.addEventListener('click', () => {
+      itemCount = 5;
+      selectedItemIndex = 0;
+      selectDisplay.value = 'flex';
+      selectFlexDirection.value = 'row';
+      selectFlexWrap.value = 'nowrap';
+      selectJustifyContent.value = 'flex-start';
+      selectAlignItems.value = 'stretch';
+      selectGridColumns.value = '1fr 1fr 1fr';
+      selectGridJustifyItems.value = 'stretch';
+      selectGridAlignItems.value = 'stretch';
+      sliderGap.value = 16;
+      sliderMinHeight.value = 280;
+
+      itemsData = Array.from({ length: 8 }, () => ({ grow: 0, shrink: 1, alignSelf: 'auto' }));
+
+      renderItems();
+      updateLayout();
+      updateItemInspector();
+      showToast('Reset playground to default state');
+    });
+
+    // Event Listeners for Container Dropdowns & Sliders
+    [
+      selectDisplay, selectFlexDirection, selectFlexWrap, selectJustifyContent, 
+      selectAlignItems, selectGridColumns, selectGridJustifyItems, selectGridAlignItems,
+      sliderGap, sliderMinHeight, toggleGuides
+    ].forEach(element => {
+      element.addEventListener('input', updateLayout);
+      element.addEventListener('change', updateLayout);
+    });
+
+    // Initialization on window load
+    window.onload = function() {
+      renderItems();
+      updateLayout();
+      updateItemInspector();
+    };
+  </script>
+</body>
+</html>
