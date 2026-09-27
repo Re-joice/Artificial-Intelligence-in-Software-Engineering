@@ -1,62 +1,77 @@
 /**
- * Handles queue-related notifications and warnings.
- * Responsibility: Console logging and alerting.
+ * task_queue_clean.js
+ * Refactored TaskQueue with separated responsibilities.
  */
-class QueueLogger {
-  static logQueueStart(queueName) {
-    console.log(`Starting queue ${queueName}.`);
-  }
 
-  static logHighPriorityWarning(queueName, priority) {
+class NotificationService {
+  static notifyIfHighPriority(queueName, priority) {
     if (priority > 9) {
       console.warn(`High priority task added to ${queueName}.`);
     }
   }
 }
 
-/**
- * Manages queue storage and task processing status.
- * Responsibility: Pure task queuing and execution triggers.
- */
+class QueueProcessor {
+  static checkAndStart(queue) {
+    if (queue.tasks.length === 1 && !queue.isProcessing) {
+      console.log(`Starting queue ${queue.queueName}.`);
+      queue._startProcessing();
+    }
+  }
+}
+
 class TaskQueue {
-  constructor(name, logger = QueueLogger) {
+  constructor(name) {
     this.queueName = name;
     this.tasks = [];
     this.isProcessing = false;
-    this.logger = logger;
   }
 
-  /**
-   * Adds a new task function to the queue.
-   * @param {Function} taskFn - The task execution function
-   * @param {number} priority - Task priority level
-   */
   addTask(taskFn, priority) {
-    if (typeof taskFn !== 'function') {
-      throw new TypeError('Task must be a function.');
+    if (!taskFn || typeof taskFn !== 'function') {
+      console.error('Task must be a function.');
+      return null;
     }
 
-    // 1. Add task to array
-    const task = { taskFn, priority, timestamp: Date.now() };
+    const task = {
+      taskFn,
+      priority,
+      timestamp: Date.now()
+    };
+
     this.tasks.push(task);
-
-    // 2. Delegate notification to external logger
-    this.logger.logHighPriorityWarning(this.queueName, priority);
-
-    // 3. Delegate start logic
-    if (this.shouldStartProcessing()) {
-      this.logger.logQueueStart(this.queueName);
-      this._startProcessing();
-    }
-  }
-
-  shouldStartProcessing() {
-    return this.tasks.length === 1 && !this.isProcessing;
+    return task;
   }
 
   _startProcessing() {
     this.isProcessing = true;
+    // ... logic to process tasks ...
   }
 }
 
-module.exports = { TaskQueue, QueueLogger };
+class TaskQueueManager {
+  constructor(queueName) {
+    this.queue = new TaskQueue(queueName);
+  }
+
+  addTask(taskFn, priority) {
+    const task = this.queue.addTask(taskFn, priority);
+
+    if (task) {
+      NotificationService.notifyIfHighPriority(
+        this.queue.queueName,
+        priority
+      );
+      QueueProcessor.checkAndStart(this.queue);
+    }
+
+    return task;
+  }
+}
+
+module.exports = {
+  TaskQueue,
+  TaskQueueManager,
+  NotificationService,
+  QueueProcessor
+};
