@@ -1,36 +1,50 @@
-# AI: Pair Programming with AI
+# Task Queue AI Pair Programming Audit
 
 ## Overview
+This repository contains the legacy implementation and refactored code for a JavaScript `TaskQueue` class, audited with AI assistance for Single Responsibility Principle (SRP) violations and scope/closure traps.
 
-This task demonstrates the use of AI-assisted code analysis and refactoring to identify and address structural problems in a JavaScript class.
+---
 
-The exercise focuses on the Single Responsibility Principle (SRP), scope and closures, and improving code modularity and maintainability through structured prompting.
+## 1. Prompts Used
 
-## Files
+### Prompt 1: Scope & Closures Audit
+```text
+Act as a Senior JavaScript Developer. I am reviewing a legacy task queue implementation in JavaScript.
 
-### 1. task_queue_legacy.js
+Code:
+class TaskQueue {
+  constructor(name) {
+    this.queueName = name;
+    this.tasks = [];
+    this.isProcessing = false;
+  }
 
-This file contains the original TaskQueue implementation provided for the exercise. It intentionally contains SRP violations and scope/closure issues for analysis.
+  addTask(taskFn, priority) {
+    if (!taskFn || typeof taskFn !== 'function') {
+      console.error('Task must be a function.');
+      return;
+    }
+    this.tasks.push({ taskFn, priority, timestamp: Date.now() });
 
-### 2. task_queue_clean.js
+    if (this.tasks.length === 1) {
+      console.log(`Starting queue ${this.queueName}.`);
+      this._startProcessing();
+    }
 
-This file contains the refactored TaskQueue implementation after applying the AI-assisted analysis and refactoring process.
+    function notify() { 
+      if (priority > 9) {
+        console.warn(`High priority task added to ${name}.`);
+      }
+    }
+    notify(); 
+  }
 
-The refactoring separates task management from logging and scheduling responsibilities and addresses the scope/closure concerns identified during the audit.
+  _startProcessing() {
+    this.isProcessing = true;
+  }
+}
 
-## AI Tool Used
-
-Gemini was used as an AI pair programmer to:
-
-- Audit the legacy JavaScript code for scope and closure behavior.
-- Identify Single Responsibility Principle violations.
-- Suggest a refactored implementation.
-- Review the final implementation for correctness.
-
-## Learning Focus
-
-The task focuses on using structured prompting to understand code structure rather than simply asking AI to fix code. It demonstrates how AI pattern matching can help identify structural problems such as SRP violations, scope issues, and closure behavior.
-
-## Reflection
-
-LLMs are pattern-matching engines rather than code executors, so their usefulness depends on asking focused questions about the structure and behavior of code. In this exercise, auditing the `notify` closure and the SRP violations helped me understand why the original `addTask` method mixed responsibilities, instead of simply accepting an AI-generated fix without understanding the underlying problems.
+Please analyze the addTask method:
+1. Explain the scope of the notify function and what variables it "closes over."
+2. Identify any variables that should be block-scoped (using let or const) but are not, and why this matters for predictable code.
+3. Explain how closures are created in this specific context and why referencing 'name' instead of 'this.queueName' causes issues.
